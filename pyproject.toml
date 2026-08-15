@@ -31,7 +31,7 @@ dependencies = ["rich>=13.0"]
 # Exact tokenization for Prompt Lab. Without it we fall back to a
 # character-ratio heuristic, which is fine for relative comparisons.
 tokenizers = ["tiktoken>=0.7"]
-dev = ["pytest>=8.0", "ruff>=0.6", "mypy>=1.11"]
+dev = ["pytest>=8.0", "ruff>=0.6,<0.17", "mypy>=1.11"]
 # Not in `dev` on purpose — one browser-driven test (test_static_export.py)
 # uses it via `pytest.importorskip`, and skips cleanly without it. Adding it
 # to the default dev install would force every contributor to download
@@ -51,6 +51,17 @@ packages = ["src/agentlens"]
 [tool.ruff]
 line-length = 100
 target-version = "py310"
+
+[tool.ruff.lint]
+# Pinned explicitly rather than left to ruff's unconfigured default. That
+# default has changed across ruff releases as new rule categories graduate
+# to stable and get folded in — which is exactly what broke CI on 2026-08-15:
+# code that passed `ruff check` cleanly under one installed ruff version
+# failed with 147 new findings under a newer one, on a totally unchanged
+# codebase, because "no explicit select" quietly grew stricter underneath
+# us. Pinning this list means upgrading ruff can never silently change what
+# passes — a genuinely new rule has to be opted into on purpose.
+select = ["E4", "E7", "E9", "F"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -6,6 +6,9 @@
 *.db-shm
 .agentlens/
 history.json
+# run.sh's pidfile/logfile — machine-local, never something to commit.
+.agentlens.pid
+.agentlens.log
 !fixtures/**/*.jsonl
 
 __pycache__/

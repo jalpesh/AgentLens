@@ -100,6 +100,31 @@ pipx install agentlens-cli
 
 Python 3.10+. One dependency (`rich`). No Node, no Docker, no account, no API key.
 
+### Running from source
+
+If you cloned the repo instead of installing the published package, skip the
+manual venv/pip dance and use the bundled runner — it creates the venv,
+installs everything, ingests your local history and starts the dashboard:
+
+```bash
+git clone https://github.com/jalpesh/AgentLens.git && cd AgentLens
+./run.sh                  # setup + ingest + start, all in one
+```
+
+`run.sh` always uses `python3` explicitly (never bare `python`), is safe to
+re-run (it won't reinstall an already-good venv or start a second server on
+top of one it already started), and has explicit subcommands too:
+
+```bash
+./run.sh setup            # create .venv, install agentlens-cli + dev deps
+./run.sh ingest [args]     # parse local agent history into the local db
+./run.sh start [--port N]  # start the dashboard (default port 7878)
+./run.sh stop              # stop the dashboard, if this script started it
+./run.sh restart           # stop, then start
+./run.sh status            # is a server running, and on what port/pid
+./run.sh test              # ruff + pytest
+```
+
 ## Use
 
 ```bash
@@ -411,9 +436,18 @@ Three details that matter more than they look:
 
 ```bash
 git clone https://github.com/jalpesh/AgentLens.git && cd AgentLens
+./run.sh setup && ./run.sh test    # venv + install + ruff + pytest, in one step
+```
+
+That's the same `[dev]` install and the same `ruff check` + `pytest -q` CI
+runs — good for a quick clean-checkout sanity check. For more control
+(installing manually, generating synthetic history yourself, pointing
+individual adapters at a demo directory), do it by hand instead:
+
+```bash
 pip install -e ".[dev]"
 python fixtures/generate.py --demo ~/agentlens-demo   # synthetic history, all 7 agents
-pytest -q                                              # 141 tests
+pytest -q                                              # 144 tests
 
 # fixtures/generate.py prints the exact export lines for your shell; e.g.:
 export CLAUDE_CONFIG_DIR=~/agentlens-demo/.claude
