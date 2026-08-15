@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import dataclasses
 import json
+import re
 import threading
 import webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -46,6 +47,22 @@ _MARKER = "const AGENTLENS_STATIC_DATA = null;"
 #: enormous file doesn't turn a UI click into reading gigabytes into memory.
 _CITATION_MAX_LINES = 400
 _CITATION_MAX_BYTES = 512_000
+
+#: Matches a POSIX-absolute path ("/home/dev/x.py"), a Windows drive path
+#: ("C:\x.py" or "C:/x.py"), or a Windows UNC path ("\\host\share\x.py").
+#:
+#: `Path(path).is_absolute()` is NOT good enough here: it's answered by
+#: whichever `Path` class the *current* OS instantiates, not by the shape of
+#: the string. The whole point of citation is showing a file from a session
+#: that may have run on a *different* machine — a Claude Code session logged
+#: on Linux/macOS records POSIX paths like "/home/dev/project/file.py". Open
+#: that same dashboard on Windows and `Path("/home/dev/...").is_absolute()`
+#: is `False` (Windows absolute paths need a drive letter), so the endpoint
+#: rejected a perfectly well-formed absolute path as malformed input instead
+#: of correctly reporting "file not available on this machine". Caught by CI
+#: failing on windows-latest only, 2026-08-15 — ubuntu/macOS runners never
+#: exercise the branch where the string and the OS disagree.
+_ABS_PATH_RE = re.compile(r"^(/|[A-Za-z]:[\\/]|\\\\)")
 
 
 def build_payload(
@@ -274,9 +291,9 @@ def make_handler(db: str | None):
             if not path:
                 return {"available": False, "reason": "no path given"}
             try:
-                p = Path(path)
-                if not p.is_absolute():
+                if not _ABS_PATH_RE.match(path):
                     return {"available": False, "reason": "not an absolute path"}
+                p = Path(path)
                 if not p.exists():
                     return {
                         "available": False,

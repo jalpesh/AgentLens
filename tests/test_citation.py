@@ -42,6 +42,21 @@ def test_empty_path_degrades_gracefully(citation):
     assert result["available"] is False
 
 
+def test_windows_style_absolute_path_is_recognized_as_absolute(citation):
+    """A session logged on Windows records paths like `C:\\Users\\...`. The
+    citation endpoint must recognize that shape as absolute even when the
+    dashboard itself is running on Linux/macOS (where `pathlib.Path` would
+    otherwise judge it by POSIX rules) — the whole feature exists to show
+    files from a session that may not be running on this machine."""
+    result = citation(r"C:\Users\dev\project\definitely-not-here.py")
+    assert result["reason"] != "not an absolute path"
+
+
+def test_unc_path_is_recognized_as_absolute(citation):
+    result = citation(r"\\myhost\share\definitely-not-here.py")
+    assert result["reason"] != "not an absolute path"
+
+
 def test_relative_path_is_refused(citation):
     """A relative path is ambiguous about *which* file it means (relative to
     what — the server's cwd? the browser's?) and accepting one would be an
