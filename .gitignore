@@ -1,0 +1,25 @@
+# Never commit real agent history. It contains repo paths, hostnames,
+# client names and occasionally credentials.
+*.jsonl
+*.db
+*.db-wal
+*.db-shm
+.agentlens/
+history.json
+!fixtures/**/*.jsonl
+
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+build/
+dist/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.DS_Store
+.idea/
+.vscode/

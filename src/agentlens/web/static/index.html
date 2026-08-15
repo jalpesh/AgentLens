@@ -1,0 +1,1243 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AgentLens</title>
+<style>
+  /* Palette: dark steps from the validated reference instance.
+     Categorical 1-3 (#3987e5 / #d95926 / #199e70) pass all six checks
+     all-pairs on this surface. Status colors are reserved and always ship
+     with a text label, never color alone. */
+  :root{
+    --surface-0:#101013; --surface-1:#16161a; --surface-2:#1e1e24; --line:#2b2b33;
+    --text-primary:#ffffff; --text-secondary:#c3c2b7; --text-muted:#8a8a83;
+    --series-1:#3987e5; --series-2:#d95926; --series-3:#199e70;
+    --good:#0ca30c; --warning:#fab219; --serious:#ec835a; --critical:#d03b3b;
+    --radius:10px;
+    --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--surface-0);color:var(--text-primary);
+       font-family:var(--sans);font-size:14px;line-height:1.55;
+       -webkit-font-smoothing:antialiased}
+  header{display:flex;align-items:center;gap:16px;padding:14px 26px;
+         border-bottom:1px solid var(--line);background:var(--surface-1);
+         position:sticky;top:0;z-index:20;flex-wrap:wrap}
+  .brand{font-weight:650;font-size:15px;letter-spacing:-.01em}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--series-3);
+       display:inline-block;margin-right:9px;vertical-align:1px}
+  .badge{font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;
+         border:1px solid var(--series-3);color:var(--series-3);
+         padding:2px 8px;border-radius:999px;font-weight:600}
+  nav{margin-left:auto;display:flex;gap:2px;flex-wrap:wrap}
+  nav button{background:none;border:0;color:var(--text-secondary);cursor:pointer;
+             padding:7px 13px;border-radius:7px;font-size:13px;font-family:inherit}
+  nav button:hover{background:var(--surface-2);color:var(--text-primary)}
+  nav button[aria-selected="true"]{background:var(--surface-2);color:var(--text-primary);
+             font-weight:600}
+  main{padding:26px;max-width:1360px;margin:0 auto}
+  .panel{display:none} .panel.on{display:block}
+  h2{font-size:12px;letter-spacing:.1em;text-transform:uppercase;
+     color:var(--text-muted);margin:30px 0 12px;font-weight:600}
+  h2:first-child{margin-top:0}
+
+  .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px}
+  .tile{background:var(--surface-1);border:1px solid var(--line);
+        border-radius:var(--radius);padding:16px 18px}
+  .tile .k{font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+           color:var(--text-muted);font-weight:600}
+  .tile .v{font-size:30px;font-weight:660;margin-top:6px;letter-spacing:-.02em;
+           font-variant-numeric:tabular-nums}
+  .tile .s{font-size:12px;color:var(--text-secondary);margin-top:3px}
+  .tile.hero{border-color:var(--critical)}
+  .tile.hero .v{color:var(--critical)}
+
+  .card{background:var(--surface-1);border:1px solid var(--line);
+        border-radius:var(--radius);padding:18px}
+  .grid2{display:grid;grid-template-columns:1.4fr 1fr;gap:14px}
+  @media(max-width:900px){.grid2{grid-template-columns:1fr}}
+
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{text-align:left;font-size:11px;letter-spacing:.07em;text-transform:uppercase;
+     color:var(--text-muted);font-weight:600;padding:0 10px 9px;
+     border-bottom:1px solid var(--line)}
+  td{padding:9px 10px;border-bottom:1px solid var(--surface-2);
+     font-variant-numeric:tabular-nums}
+  tr:last-child td{border-bottom:0}
+  .num{text-align:right}
+  .swatch{width:9px;height:9px;border-radius:2px;display:inline-block;margin-right:8px}
+
+  /* Findings — the reason this product exists. Given the most visual weight. */
+  .finding{background:var(--surface-1);border:1px solid var(--line);
+           border-left:3px solid var(--warning);border-radius:var(--radius);
+           padding:17px 20px;margin-bottom:13px}
+  .finding[data-sev="high"]{border-left-color:var(--critical)}
+  .finding[data-sev="medium"]{border-left-color:var(--serious)}
+  .finding[data-sev="low"]{border-left-color:var(--series-1)}
+  .fhead{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+  .ftitle{font-weight:640;font-size:15px;letter-spacing:-.01em}
+  .fcost{margin-left:auto;font-size:19px;font-weight:660;
+          font-variant-numeric:tabular-nums}
+  .fsev{font-size:10px;letter-spacing:.08em;text-transform:uppercase;
+        font-weight:700;padding:2px 7px;border-radius:4px;background:var(--surface-2)}
+  .fmeta{font-size:12px;color:var(--text-muted);margin-top:2px}
+  .fmech{color:var(--text-secondary);margin:9px 0 0;font-size:13px}
+  .ffix{margin-top:9px;padding:9px 12px;background:rgba(25,158,112,.10);
+        border-radius:7px;color:var(--text-primary);font-size:13px}
+  .ffix b{color:var(--series-3)}
+  .ev{margin-top:11px;padding:10px 13px;background:var(--surface-0);
+      border-radius:7px;border:1px solid var(--line)}
+  .ev q{font-family:var(--mono);font-size:12.5px;color:var(--text-primary);
+        display:block;line-height:1.5}
+  .ev q::before{content:'"'} .ev q::after{content:'"'}
+  .ev .d{font-size:11.5px;color:var(--text-muted);margin-top:6px}
+
+  /* "not your prompt" — every other finding implicitly blames the user, so
+     the exceptions are marked explicitly rather than left to be inferred. */
+  .not-you{display:inline-block;margin-left:8px;font-size:10.5px;font-weight:600;
+           letter-spacing:.05em;color:var(--series-1);border:1px solid var(--series-1);
+           border-radius:999px;padding:1px 8px;text-transform:uppercase}
+  /* Escalation ladder — reached rungs highlighted, later ones dimmed. */
+  .esc{margin-top:11px;border-left:2px solid var(--line);padding-left:13px}
+  .esc-h{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;
+         color:var(--text-muted);font-weight:600;margin-bottom:6px}
+  .esc-row{display:flex;gap:10px;font-size:12.5px;color:var(--text-muted);
+           padding:3px 0;align-items:baseline}
+  .esc-row.on{color:var(--text-secondary)}
+  .esc-n{font-family:var(--mono);color:var(--text-muted);min-width:26px}
+  .esc-row.on .esc-n{color:var(--series-1);font-weight:700}
+  .ev-lab{margin-top:9px;background:none;border:1px solid var(--line);
+          color:var(--series-1);border-radius:6px;padding:5px 10px;font-size:12px;
+          cursor:pointer;font-family:inherit}
+  .ev-lab:hover{background:var(--surface-2);border-color:var(--series-1)}
+  .lab-rewrite{margin-top:14px;background:var(--surface-0);border:1px solid var(--line);
+               border-left:3px solid var(--series-3);border-radius:8px;padding:13px}
+  .lab-rewrite h3{margin:0 0 8px;font-size:11px;letter-spacing:.08em;
+                  text-transform:uppercase;color:var(--text-muted)}
+  .lab-rewrite pre{margin:0;white-space:pre-wrap;font-family:var(--mono);
+                   font-size:12.5px;line-height:1.55;color:var(--text-primary)}
+  .lab-filled{font-size:11.5px;color:var(--text-muted);margin-top:8px}
+
+  /* Agents & Skills */
+  .sk{background:var(--surface-1);border:1px solid var(--line);
+      border-left:3px solid var(--series-1);border-radius:var(--radius);
+      padding:15px 18px;margin-bottom:12px}
+  .sk-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+  .sk-kind{font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;
+           font-weight:700;color:var(--series-1);border:1px solid var(--series-1);
+           border-radius:4px;padding:1px 7px}
+  .sk-title{font-weight:640;font-size:14.5px}
+  .sk-cost{margin-left:auto;font-weight:660;font-variant-numeric:tabular-nums}
+  .sk-why{color:var(--text-secondary);font-size:13px;margin:9px 0 0}
+  .sk-trig{font-size:11.5px;color:var(--text-muted);margin-top:6px;font-family:var(--mono)}
+  .sk-warn{margin-top:8px;font-size:12px;color:var(--warning)}
+  .sk-actions{display:flex;gap:8px;margin-top:11px;align-items:center;flex-wrap:wrap}
+  .sk-path{font-family:var(--mono);font-size:11.5px;color:var(--series-3);
+           margin-right:auto}
+  .sk-code{margin-top:11px;background:var(--surface-0);border:1px solid var(--line);
+           border-radius:7px;padding:12px;display:none}
+  .sk-code.on{display:block}
+  .sk-code pre{margin:0;white-space:pre-wrap;font-family:var(--mono);font-size:12px;
+               line-height:1.5;color:var(--text-primary);max-height:340px;overflow:auto}
+  .sk-cmd{font-family:var(--mono);font-size:11.5px;color:var(--text-muted);
+          margin-top:9px;padding-top:9px;border-top:1px solid var(--line)}
+  .sk-note{color:var(--text-muted);font-size:12px;margin-top:22px;
+           padding:11px 14px;border:1px dashed var(--line);border-radius:var(--radius)}
+  .sk-prof{background:var(--surface-1);border:1px solid var(--line);
+           border-radius:var(--radius);padding:14px 18px;margin-bottom:20px;font-size:13px}
+  .sk-prof b{color:var(--text-primary)}
+  .sk-prof .thin{color:var(--warning)}
+
+  /* Filters — one row, above the charts. */
+  .filters{display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap;
+           background:var(--surface-1);border:1px solid var(--line);
+           border-radius:var(--radius);padding:12px 16px;margin-bottom:20px}
+  .filters label{display:flex;flex-direction:column;gap:5px;font-size:11px;
+                 letter-spacing:.07em;text-transform:uppercase;
+                 color:var(--text-muted);font-weight:600}
+  .filters select{min-width:150px}
+  .f-status{margin-left:auto;font-size:12px;color:var(--text-muted);
+            font-variant-numeric:tabular-nums}
+  .scope-caption{background:var(--surface-1);border:1px solid var(--line);
+                 border-radius:var(--radius);padding:11px 16px;margin-bottom:20px;
+                 font-size:12.5px;color:var(--text-secondary)}
+  .scope-caption b{color:var(--text-primary)}
+
+  /* Playbook — personalised rules given the most visual weight; the curated
+     reference below is deliberately muted so the two never read as the same
+     kind of claim. */
+  .pb-head{display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:4px}
+  .pb-sub{color:var(--text-secondary);font-size:13px;margin:4px 0 0;max-width:56ch}
+  .pb-actions{margin-left:auto;display:flex;gap:8px;align-items:center}
+  .pb-btn{background:var(--surface-1);border:1px solid var(--line);color:var(--text-primary);
+          padding:7px 13px;border-radius:7px;font-size:13px;cursor:pointer;font-family:inherit}
+  .pb-btn:hover{background:var(--surface-2)}
+  .pb-btn-primary{background:var(--series-3);border-color:var(--series-3);color:#04120c;
+                  font-weight:600}
+  .pb-btn-primary:hover{filter:brightness(1.08)}
+  .pb-rule{background:var(--surface-1);border:1px solid var(--line);border-left:3px solid
+           var(--series-3);border-radius:var(--radius);padding:14px 18px;margin-top:12px;
+           display:flex;gap:14px;align-items:flex-start}
+  .pb-rank{font-family:var(--mono);color:var(--text-muted);font-size:13px;padding-top:1px}
+  .pb-rule p{margin:0;font-size:14px;line-height:1.5}
+  .pb-evidence{font-size:11.5px;color:var(--series-3);margin-top:6px;font-family:var(--mono)}
+  .pb-divider{display:flex;align-items:center;gap:12px;margin:34px 0 6px;
+             color:var(--text-muted);font-size:11px;letter-spacing:.09em;
+             text-transform:uppercase;font-weight:600}
+  .pb-divider::before,.pb-divider::after{content:'';flex:1;height:1px;background:var(--line)}
+  .pb-reference{background:var(--surface-0);border:1px dashed var(--line);
+                border-radius:var(--radius);padding:16px 20px;margin-top:10px}
+  .pb-reference ul{margin:0;padding-left:20px;color:var(--text-secondary);font-size:13px;
+                   line-height:1.8}
+  .pb-empty{color:var(--text-muted);padding:20px 0}
+
+  /* Prompt Lab */
+  .lab{display:grid;grid-template-columns:1fr 400px;gap:14px}
+  @media(max-width:980px){.lab{grid-template-columns:1fr}}
+  textarea{width:100%;min-height:270px;background:var(--surface-0);
+           color:var(--text-primary);border:1px solid var(--line);
+           border-radius:8px;padding:13px;font-family:var(--mono);
+           font-size:13px;resize:vertical;line-height:1.6}
+  textarea:focus{outline:2px solid var(--series-1);outline-offset:-1px}
+  select{background:var(--surface-0);color:var(--text-primary);
+         border:1px solid var(--line);border-radius:7px;padding:6px 9px;
+         font-family:inherit;font-size:13px}
+  .score{font-size:52px;font-weight:700;line-height:1;letter-spacing:-.03em;
+         font-variant-numeric:tabular-nums}
+  .issue{border-top:1px solid var(--surface-2);padding:11px 0}
+  .issue:first-of-type{border-top:0}
+  .issue .h{display:flex;gap:9px;align-items:baseline}
+  .pen{font-family:var(--mono);font-size:12px;color:var(--critical);font-weight:700}
+  .issue .fx{font-size:12.5px;color:var(--text-secondary);margin-top:4px}
+  .issue .sp{font-family:var(--mono);font-size:11.5px;color:var(--warning);margin-top:3px}
+
+  /* Session drill-down */
+  .sess-row{cursor:pointer}
+  .sess-row:hover td{background:var(--surface-2)}
+  .detail-card{margin-top:14px}
+  .cite-btn{margin-top:8px;background:none;border:1px solid var(--line);
+            color:var(--text-muted);border-radius:6px;padding:4px 9px;
+            font-size:11.5px;cursor:pointer;font-family:inherit}
+  .cite-btn:hover{border-color:var(--series-1);color:var(--series-1)}
+  .cite-box{margin-top:9px;background:var(--surface-0);border:1px solid var(--line);
+            border-radius:7px;padding:10px 12px;display:none}
+  .cite-box.on{display:block}
+  .cite-box pre{margin:0;white-space:pre-wrap;font-family:var(--mono);font-size:11.5px;
+                line-height:1.5;max-height:280px;overflow:auto}
+  .cite-unavailable{color:var(--text-muted);font-size:12px;font-style:italic}
+
+  svg{display:block;width:100%;overflow:visible}
+  .gridline{stroke:var(--line);stroke-width:1}
+  .axis{fill:var(--text-muted);font-size:10.5px;font-family:var(--mono)}
+  .empty{color:var(--text-muted);padding:34px;text-align:center;
+         border:1px dashed var(--line);border-radius:var(--radius)}
+  code{font-family:var(--mono);background:var(--surface-2);padding:1px 5px;
+       border-radius:4px;font-size:.9em}
+  .foot{color:var(--text-muted);font-size:12px;padding:26px 0 6px;text-align:center}
+  .tip{position:fixed;pointer-events:none;background:var(--surface-2);
+       border:1px solid var(--line);border-radius:7px;padding:7px 10px;
+       font-size:12px;opacity:0;transition:opacity .1s;z-index:60;
+       font-variant-numeric:tabular-nums;box-shadow:0 4px 14px rgba(0,0,0,.4)}
+</style>
+</head>
+<body>
+<header>
+  <span class="brand"><span class="dot"></span>AgentLens</span>
+  <span class="badge">offline</span>
+  <nav role="tablist">
+    <button role="tab" aria-selected="true" data-p="waste">Change this</button>
+    <button role="tab" aria-selected="false" data-p="overview">Overview</button>
+    <button role="tab" aria-selected="false" data-p="sessions">Sessions</button>
+    <button role="tab" aria-selected="false" data-p="engineering">Engineering</button>
+    <button role="tab" aria-selected="false" data-p="history">History</button>
+    <button role="tab" aria-selected="false" data-p="playbook">Playbook</button>
+    <button role="tab" aria-selected="false" data-p="skills">Agents &amp; Skills</button>
+    <button role="tab" aria-selected="false" data-p="lab">Prompt Lab</button>
+  </nav>
+</header>
+
+<main>
+  <!-- Filters: one row above everything, per the interaction spec. -->
+  <div class="filters" id="filters">
+    <label>Project
+      <select id="f-project"><option value="">All projects</option></select>
+    </label>
+    <label>Agent
+      <select id="f-provider"><option value="">All agents</option></select>
+    </label>
+    <label>Time
+      <select id="f-days">
+        <option value="">All time</option>
+        <option value="7">Last 7 days</option>
+        <option value="30">Last 30 days</option>
+        <option value="90">Last 90 days</option>
+      </select>
+    </label>
+    <label>Session
+      <select id="f-session"><option value="">All sessions</option></select>
+    </label>
+    <button id="f-reset" class="pb-btn">Reset</button>
+    <span id="f-status" class="f-status"></span>
+  </div>
+  <!-- Static exports have no server to re-query, so the filter row is
+       replaced by a caption stating the scope that was baked in. A dropdown
+       that looks clickable but silently does nothing is worse than a label. -->
+  <div class="scope-caption" id="scope-caption" hidden></div>
+
+  <!-- ==================== CHANGE THIS (the differentiator) ============ -->
+  <section class="panel on" id="p-waste">
+    <div class="tiles" id="waste-tiles"></div>
+    <h2>Habits you repeat — ranked by what they cost you</h2>
+    <div id="findings"></div>
+  </section>
+
+  <!-- ==================== OVERVIEW =================================== -->
+  <section class="panel" id="p-overview">
+    <div class="tiles" id="ov-tiles"></div>
+    <div class="grid2" style="margin-top:14px">
+      <div class="card">
+        <h2>Daily spend</h2>
+        <div id="chart-daily"></div>
+      </div>
+      <div class="card">
+        <h2>Cost by model</h2>
+        <div id="tbl-model"></div>
+      </div>
+    </div>
+    <div class="grid2" style="margin-top:14px">
+      <div class="card"><h2>By agent</h2><div id="tbl-provider"></div></div>
+      <div class="card"><h2>Tool mix</h2><div id="tbl-tools"></div></div>
+    </div>
+  </section>
+
+  <!-- ==================== SESSIONS =================================== -->
+  <section class="panel" id="p-sessions">
+    <div class="card"><h2>Sessions by cost</h2>
+      <p class="pb-sub" style="margin:-4px 0 10px">Click a session to open its
+        turn-by-turn drill-down.</p>
+      <div id="tbl-sessions"></div>
+    </div>
+    <div id="session-detail"></div>
+  </section>
+
+  <!-- ==================== ENGINEERING ================================= -->
+  <section class="panel" id="p-engineering">
+    <div class="tiles" id="eng-tiles"></div>
+    <div class="grid2" style="margin-top:14px">
+      <div class="card"><h2>Searches &amp; greps</h2><div id="eng-searches"></div></div>
+      <div class="card"><h2>Loop-family cost</h2><div id="eng-loop"></div></div>
+    </div>
+    <div id="eng-suggestion"></div>
+    <h2 style="margin-top:22px">What's actually in that number</h2>
+    <p class="pb-sub">The loop-cost tile above is a total. These are the specific findings
+      it's made of — the same prompts, errors and per-attempt breakdowns as the Waste tab,
+      filtered to just the loop-family detectors.</p>
+    <div id="eng-loop-findings"></div>
+  </section>
+
+  <!-- ==================== HISTORY ====================================== -->
+  <section class="panel" id="p-history">
+    <div class="grid2">
+      <div class="card"><h2>Prompt size over time</h2><div id="chart-prompt-size"></div></div>
+      <div class="card"><h2>Prompt quality over time</h2><div id="chart-prompt-quality"></div></div>
+    </div>
+    <h2 style="margin-top:22px">Heaviest prompts</h2>
+    <div class="card"><div id="tbl-heaviest"></div></div>
+  </section>
+
+  <!-- ==================== PLAYBOOK ==================================== -->
+  <section class="panel" id="p-playbook">
+    <div class="pb-head">
+      <div>
+        <h2 style="margin:0">Rules from your own history</h2>
+        <p class="pb-sub">Generated from your findings, ranked by what they cost you. Paste
+          straight into your project.</p>
+      </div>
+      <div class="pb-actions">
+        <select id="pb-format">
+          <option value="claude">CLAUDE.md</option>
+          <option value="agents">AGENTS.md</option>
+          <option value="junie">.junie/guidelines.md</option>
+          <option value="markdown">Markdown</option>
+        </select>
+        <button id="pb-copy" class="pb-btn">Copy</button>
+        <button id="pb-download" class="pb-btn pb-btn-primary">Download</button>
+      </div>
+    </div>
+    <div id="pb-rules"></div>
+
+    <div class="pb-divider">
+      <span>General reference</span>
+    </div>
+    <p class="pb-sub" style="margin-top:-6px">Static best practices, not derived from your
+      data — worth keeping regardless of what the rules above find.</p>
+    <div id="pb-reference" class="pb-reference"></div>
+  </section>
+
+  <!-- ==================== AGENTS & SKILLS ============================= -->
+  <section class="panel" id="p-skills">
+    <div id="sk-profile"></div>
+    <h2>Suggested for this project</h2>
+    <p class="pb-sub" style="margin:-4px 0 4px">Every suggestion names the finding that
+      triggered it. Nothing here is generic advice.</p>
+    <div id="sk-list"></div>
+
+    <div class="pb-divider"><span>Generic best practices</span></div>
+    <p class="pb-sub" style="margin-top:-6px">Not derived from your data — useful for most
+      projects regardless of what we found above.</p>
+    <div id="sk-generic"></div>
+
+    <p class="sk-note">AgentLens never writes to your filesystem from the browser.
+      Preview and download here, or run the shown command in your terminal.</p>
+  </section>
+
+  <!-- ==================== PROMPT LAB ================================= -->
+  <section class="panel" id="p-lab">
+    <div class="lab">
+      <div class="card">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:11px">
+          <h2 style="margin:0">Prompt</h2>
+          <select id="lab-model" style="margin-left:auto">
+            <option value="claude-sonnet-4-5">claude-sonnet-4-5</option>
+            <option value="claude-opus-4-5">claude-opus-4-5</option>
+            <option value="claude-haiku-4-5">claude-haiku-4-5</option>
+            <option value="gpt-5.1-codex">gpt-5.1-codex</option>
+            <option value="gemini-3-pro">gemini-3-pro</option>
+          </select>
+        </div>
+        <textarea id="lab-text" placeholder="Paste the prompt you're about to send…"></textarea>
+        <div style="margin-top:9px;color:var(--text-muted);font-size:12px" id="lab-counts"></div>
+      </div>
+      <div class="card" id="lab-report">
+        <div class="empty">Scored locally as you type. Nothing is sent anywhere.</div>
+      </div>
+    </div>
+  </section>
+
+  <p class="foot">All analysis runs on this machine. Nothing is uploaded.</p>
+</main>
+<div class="tip" id="tip"></div>
+
+<script>
+/* AGENTLENS_STATIC_EXPORT_MARKER — `agentlens report --html` replaces this
+   whole line with `const AGENTLENS_STATIC_DATA = {...baked-in JSON...};`.
+   This is the ONLY difference between the live-served page and a static
+   export: same template, same code path, so the two can never drift apart. */
+const AGENTLENS_STATIC_DATA = null;
+
+const $ = s => document.querySelector(s);
+const money = v => v >= 0.01 ? '$' + v.toFixed(2) : '$' + v.toFixed(4);
+/* Axis ticks need a consistent width, so they get their own format —
+   "$0.0000" next to "$2.30" reads as noise. */
+const axisMoney = v => v === 0 ? '$0' : v >= 1 ? '$' + v.toFixed(2) : '$' + v.toFixed(3);
+/* Categorical slots, assigned in fixed order and never cycled: past the
+   third series everything folds to muted ink rather than inventing a hue. */
+const SERIES = ['var(--series-1)','var(--series-2)','var(--series-3)'];
+const slot = i => SERIES[i] || 'var(--text-muted)';
+/* Stable entity→colour map. Assignment order is first-seen across the whole
+   session of using the page, so filtering a series out and back in returns it
+   to the same colour rather than reshuffling the survivors. */
+const _slotMap = new Map();
+function slotFor(key){
+  if(!_slotMap.has(key)) _slotMap.set(key, _slotMap.size);
+  return slot(_slotMap.get(key));
+}
+const num = v => (v||0).toLocaleString();
+const esc = s => String(s??'').replace(/[&<>"]/g, c =>
+  ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const SEV = {high:'var(--critical)', medium:'var(--serious)', low:'var(--series-1)'};
+let DATA = null;
+
+/* ---------- tabs ---------- */
+document.querySelectorAll('nav button').forEach(b => b.onclick = () => {
+  document.querySelectorAll('nav button').forEach(x =>
+    x.setAttribute('aria-selected', x === b));
+  document.querySelectorAll('.panel').forEach(p =>
+    p.classList.toggle('on', p.id === 'p-' + b.dataset.p));
+});
+
+/* ---------- tooltip ---------- */
+const tip = $('#tip');
+function showTip(e, html){
+  tip.innerHTML = html; tip.style.opacity = 1;
+  tip.style.left = Math.min(e.clientX + 14, innerWidth - 210) + 'px';
+  tip.style.top = (e.clientY - 12) + 'px';
+}
+const hideTip = () => tip.style.opacity = 0;
+
+/* ---------- table helper ---------- */
+function table(cols, rows){
+  if(!rows.length) return '<div class="empty">No data yet.</div>';
+  const head = cols.map(c => `<th class="${c.n?'num':''}">${esc(c.t)}</th>`).join('');
+  const body = rows.map(r =>
+    '<tr>' + cols.map(c => `<td class="${c.n?'num':''}">${c.f(r)}</td>`).join('') + '</tr>'
+  ).join('');
+  return `<table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`;
+}
+
+/* ---------- area chart: single-series line/area, reused everywhere ----------
+   One series, so no legend box — the panel title names it. Crosshair +
+   tooltip per the interaction spec; recessive grid; 2px line.
+   `opts` lets every other chart in the dashboard (session cost/context-fill
+   curves, prompt size/quality over time) reuse this exact drawing code
+   instead of a second charting implementation:
+     - xKey: the field used for the x-axis label (default 'date')
+     - fmt: y-axis tick formatter (default axisMoney)
+     - tooltip(d): returns the tooltip HTML for a point (default: the
+       original daily-spend tooltip, kept as-is for the Overview chart) */
+function areaChart(el, data, key, label, opts){
+  opts = opts || {};
+  const xKey = opts.xKey || 'date';
+  const fmt = opts.fmt || axisMoney;
+  const tooltip = opts.tooltip || (d => `<b>${d.date}</b><br>${money(d.cost_usd)} · ${num(d.tokens)} tok<br>
+        <span style="color:var(--text-muted)">${d.sessions} session(s)</span>`);
+  if(!data.length){ el.innerHTML = '<div class="empty">No data yet.</div>'; return; }
+  const W = 620, H = 220, P = {t:14, r:16, b:26, l:52};
+  const iw = W - P.l - P.r, ih = H - P.t - P.b;
+  const max = Math.max(...data.map(d => d[key])) || 1;
+  const x = i => P.l + (data.length === 1 ? iw/2 : i * iw / (data.length - 1));
+  const y = v => P.t + ih - (v / max) * ih;
+  const pts = data.map((d,i) => [x(i), y(d[key])]);
+  const line = pts.map((p,i) => (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' ');
+  const area = line + ` L${pts.at(-1)[0].toFixed(1)} ${P.t+ih} L${pts[0][0].toFixed(1)} ${P.t+ih} Z`;
+
+  let ticks = '';
+  for(let i = 0; i <= 3; i++){
+    const v = max * i / 3, yy = y(v);
+    ticks += `<line class="gridline" x1="${P.l}" x2="${W-P.r}" y1="${yy}" y2="${yy}"/>
+      <text class="axis" x="${P.l-8}" y="${yy+3.5}" text-anchor="end">${fmt(v)}</text>`;
+  }
+  const lastI = data.length - 1;
+  const xlab = `<text class="axis" x="${x(0)}" y="${H-8}">${esc(String(data[0][xKey]??''))}</text>` +
+    (lastI ? `<text class="axis" x="${x(lastI)}" y="${H-8}" text-anchor="end">${esc(String(data[lastI][xKey]??''))}</text>` : '');
+
+  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${label}">
+    <defs><linearGradient id="g1" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="var(--series-1)" stop-opacity=".34"/>
+      <stop offset="100%" stop-color="var(--series-1)" stop-opacity="0"/>
+    </linearGradient></defs>
+    ${ticks}${xlab}
+    <path d="${area}" fill="url(#g1)"/>
+    <path d="${line}" fill="none" stroke="var(--series-1)" stroke-width="2"
+          stroke-linejoin="round" stroke-linecap="round"/>
+    <g id="hov"></g>
+    ${data.map((d,i) => `<rect x="${x(i)-iw/(data.length*2)-2}" y="${P.t}"
+      width="${Math.max(8, iw/data.length)}" height="${ih}" fill="transparent"
+      data-i="${i}" style="cursor:crosshair"/>`).join('')}
+  </svg>`;
+
+  const svg = el.querySelector('svg'), hov = el.querySelector('#hov');
+  svg.querySelectorAll('rect[data-i]').forEach(r => {
+    r.onmousemove = e => {
+      const d = data[+r.dataset.i], px = x(+r.dataset.i), py = y(d[key]);
+      hov.innerHTML = `<line class="gridline" x1="${px}" x2="${px}" y1="${P.t}"
+        y2="${P.t+ih}" stroke="var(--text-muted)"/>
+        <circle cx="${px}" cy="${py}" r="5" fill="var(--series-1)"
+                stroke="var(--surface-1)" stroke-width="2"/>`;
+      showTip(e, tooltip(d));
+    };
+    r.onmouseleave = () => { hov.innerHTML = ''; hideTip(); };
+  });
+}
+
+/* ---------- loop attempt detail + citation drill-down ---------- */
+function attemptsTable(attempts){
+  return `<div class="detail-card">
+    <div class="esc-h" style="margin-top:11px">Per-attempt breakdown</div>
+    ${table([
+      {t:'When', f:a => esc((a.when||'').slice(0,16).replace('T',' '))},
+      {t:'Prompt in force', f:a => esc((a.prompt_excerpt||'').slice(0,60))},
+      {t:'Calls', n:1, f:a => num(a.calls)},
+      {t:'Tokens', n:1, f:a => num(a.tokens)},
+      {t:'Cost', n:1, f:a => money(a.cost_usd)},
+    ], attempts)}
+  </div>`;
+}
+
+/* The one place in the dashboard that reads file *content* off disk, and
+   only on this explicit click — never as part of the default page load.
+   See SECURITY.md's "Loop citations" section. Degrades to an italic
+   unavailable message rather than an error if the file has moved or this
+   isn't the machine the session ran on. */
+function loadCitation(btn){
+  const box = btn.nextElementSibling;
+  const already = box.dataset.loaded === '1';
+  box.classList.toggle('on');
+  if(already) return;
+  box.innerHTML = '<div class="cite-unavailable">Reading file…</div>';
+  fetch('/api/citation?path=' + encodeURIComponent(btn.dataset.path))
+    .then(r => r.json())
+    .then(r => {
+      box.dataset.loaded = '1';
+      if(!r.available){
+        box.innerHTML = `<div class="cite-unavailable">File not available locally
+          ${r.reason ? '(' + esc(r.reason) + ')' : ''} — the repo may have moved, or
+          this isn't the machine the session ran on.</div>`;
+        return;
+      }
+      box.innerHTML = `<div style="font-family:var(--mono);font-size:11px;
+          color:var(--text-muted);margin-bottom:6px">${esc(r.path)}${r.truncated ? ' (truncated)' : ''}</div>
+        <pre>${esc(r.content)}</pre>`;
+    })
+    .catch(() => {
+      box.dataset.loaded = '1';
+      box.innerHTML = '<div class="cite-unavailable">File not available locally.</div>';
+    });
+}
+
+/* ---------- render ---------- */
+
+//: One finding card's markup. `i` is always the index into the GLOBAL
+//: `d.findings` array — even when this card is rendered into a *different*
+//: container (e.g. the Engineering tab's loop-family examples) — so the
+//: click handlers wired by `wireFindingCards` work identically no matter
+//: which panel the card physically lives in. Do not renumber per-container;
+//: that would silently break the Prompt Lab round-trip for anything not
+//: rendered on the Waste tab.
+function findingCardHTML(f, i){
+  return `
+    <article class="finding" data-sev="${esc(f.severity)}">
+      <div class="fhead">
+        <span class="ftitle">${i+1}. ${esc(f.title)}</span>
+        <span class="fsev" style="color:${SEV[f.severity]}">${esc(f.severity)}</span>
+        <span class="fcost" style="color:${SEV[f.severity]}">${money(f.wasted_usd)}</span>
+      </div>
+      <div class="fmeta">${f.occurrences}× ${f.wasted_tokens ? '· ' + num(f.wasted_tokens) + ' tokens' : ''}
+        ${f.blames_model ? '<span class="not-you">not your prompt</span>' : ''}</div>
+      <p class="fmech">${esc(f.mechanism)}</p>
+      <div class="ffix"><b>Do this instead —</b> ${esc(f.advice || f.prescription)}</div>
+      ${(f.escalation && f.escalation.length > 1) ? `
+        <div class="esc">
+          <div class="esc-h">If it keeps happening</div>
+          ${f.escalation.slice().sort((a,b)=>a.threshold-b.threshold).map(s => `
+            <div class="esc-row ${f.occurrences >= s.threshold ? 'on' : ''}">
+              <span class="esc-n">${s.threshold}+</span>
+              <span>${esc(s.advice)}</span>
+            </div>`).join('')}
+        </div>` : ''}
+      ${f.evidence.slice(0,3).map((e,ei) => `<div class="ev">
+          <q>${esc(e.quote)}</q>
+          <div class="d">${esc((e.ts||'').slice(0,16).replace('T',' '))}
+            ${e.cost_usd ? '· ' + money(e.cost_usd) : ''}
+            ${e.detail ? '· ' + esc(e.detail) : ''}</div>
+          ${(e.full_text && e.kind === 'prompt') ? `<button class="ev-lab" data-fi="${i}" data-ei="${ei}">
+              Open in Prompt Lab →</button>` : ''}
+          ${(e.target_path && !AGENTLENS_STATIC_DATA) ? `
+            <button class="cite-btn" data-path="${esc(e.target_path)}">
+              Cite the file →</button>
+            <div class="cite-box"></div>` : ''}
+        </div>`).join('')}
+      ${(f.attempts && f.attempts.length > 1) ? attemptsTable(f.attempts) : ''}
+    </article>`;
+}
+
+//: Wires the buttons inside every `.finding` card currently in the DOM,
+//: regardless of which container(s) rendered them. Safe to call more than
+//: once per render pass (reassigning `.onclick` is idempotent, not additive)
+//: — callers just need to invoke it after the LAST container that might
+//: contain finding cards has finished rendering for this data snapshot.
+function wireFindingCards(d){
+  document.querySelectorAll('.cite-btn').forEach(btn => {
+    btn.onclick = () => loadCitation(btn);
+  });
+
+  // Round-trip: load the FULL prompt (not the ellipsised quote) into the Lab
+  // and score it, carrying the session id so the rewrite scaffold can be
+  // filled from that session's real file, test command and error.
+  document.querySelectorAll('.ev-lab').forEach(btn => {
+    btn.onclick = () => {
+      const f = d.findings[+btn.dataset.fi];
+      const ev = f?.evidence[+btn.dataset.ei];
+      if(!ev?.full_text) return;
+      document.querySelector('nav button[data-p="lab"]')?.click();
+      $('#lab-text').value = ev.full_text;
+      LAB_SESSION = ev.session_id || null;
+      runLab();
+      $('#lab-text').scrollIntoView({behavior:'smooth', block:'center'});
+    };
+  });
+}
+
+function renderWaste(d){
+  const t = d.totals, pct = d.reclaimable_pct;
+  $('#waste-tiles').innerHTML = `
+    <div class="tile hero"><div class="k">Reclaimable</div>
+      <div class="v">${money(d.reclaimable_usd)}</div>
+      <div class="s">${pct}% of ${money(t.cost_usd)} total spend</div></div>
+    <div class="tile"><div class="k">Total spend</div><div class="v">${money(t.cost_usd)}</div>
+      <div class="s">${num(t.sessions)} sessions analysed</div></div>
+    <div class="tile"><div class="k">Habits found</div><div class="v">${d.findings.length}</div>
+      <div class="s">each with your own prompts as evidence</div></div>
+    <div class="tile"><div class="k">Served from cache</div><div class="v">${t.cache_hit_pct}%</div>
+      <div class="s">${num(t.cache_read)} cached input tokens</div></div>`;
+
+  if(!d.findings.length){
+    $('#findings').innerHTML = '<div class="empty">No recurring waste patterns found. '
+      + 'Your prompts are carrying their weight.</div>'; return;
+  }
+  $('#findings').innerHTML = d.findings.map((f,i) => findingCardHTML(f,i)).join('');
+}
+
+function renderOverview(d){
+  const t = d.totals;
+  $('#ov-tiles').innerHTML = `
+    <div class="tile"><div class="k">Total spend</div><div class="v">${money(t.cost_usd)}</div>
+      <div class="s">${num(t.sessions)} sessions</div></div>
+    <div class="tile"><div class="k">Tokens</div><div class="v">${num(t.tokens)}</div>
+      <div class="s">${num(t.input)} in · ${num(t.output)} out</div></div>
+    <div class="tile"><div class="k">Cache hit rate</div><div class="v">${t.cache_hit_pct}%</div>
+      <div class="s">higher is cheaper</div></div>
+    <div class="tile"><div class="k">Compactions</div><div class="v">${t.compactions}</div>
+      <div class="s">windows that filled up</div></div>`;
+
+  areaChart($('#chart-daily'), d.daily, 'cost_usd', 'Daily spend in US dollars');
+
+  // Colour follows the ENTITY, not its rank. Keying off the sorted index
+  // would repaint every surviving series the moment a filter changes the
+  // ordering — the same model would be blue in one view and orange in the
+  // next, which is exactly what makes filtered dashboards untrustworthy.
+  $('#tbl-model').innerHTML = table([
+    {t:'Model', f:r => `<span class="swatch" style="background:${slotFor(r.model)}"></span>${esc(r.model)}`},
+    {t:'Calls', n:1, f:r => num(r.calls)},
+    {t:'Cache', n:1, f:r => r.cache_hit_pct + '%'},
+    {t:'Cost', n:1, f:r => money(r.cost_usd)},
+  ], d.by_model.slice(0,12));
+
+  $('#tbl-provider').innerHTML = table([
+    {t:'Agent', f:r => esc(r.provider)},
+    {t:'Sessions', n:1, f:r => num(r.sessions)},
+    {t:'Tokens', n:1, f:r => num(r.tokens)},
+    {t:'Cost', n:1, f:r => money(r.cost_usd)},
+  ], d.by_provider);
+
+  $('#tbl-tools').innerHTML = table([
+    {t:'Tool', f:r => esc(r.tool)},
+    {t:'Calls', n:1, f:r => num(r.calls)},
+    {t:'Output', n:1, f:r => (r.output_bytes/1024).toFixed(0) + ' KB'},
+  ], d.tool_mix);
+}
+
+function renderSessions(d){
+  const rows = d.sessions.slice(0,60);
+  $('#tbl-sessions').innerHTML = table([
+    {t:'Started', f:r => esc((r.started_at||'').slice(0,16).replace('T',' '))},
+    {t:'Agent', f:r => esc(r.provider)},
+    {t:'Title', f:r => esc((r.title||'').slice(0,64))},
+    {t:'Tokens', n:1, f:r => num(r.tokens)},
+    {t:'Peak ctx', n:1, f:r => r.peak_context_pct.toFixed(0) + '%'},
+    {t:'Cost', n:1, f:r => money(r.cost_usd)},
+  ], rows);
+  $('#session-detail').innerHTML = '';
+  if(AGENTLENS_STATIC_DATA) return; // no server to drill into in a static export
+  $('#tbl-sessions').querySelectorAll('tbody tr').forEach((tr, i) => {
+    tr.classList.add('sess-row');
+    tr.onclick = () => openSessionDetail(rows[i].session_id);
+  });
+}
+
+/* ---------- session drill-down (section A) ---------- */
+function openSessionDetail(sid){
+  const el = $('#session-detail');
+  el.innerHTML = '<div class="card detail-card"><div class="empty">Loading…</div></div>';
+  fetch('/api/session?id=' + encodeURIComponent(sid)).then(r => r.json()).then(s => {
+    const det = s.detail || {};
+    const prompts = det.prompts || [];
+    el.innerHTML = `
+      <div class="card detail-card">
+        <h2 style="margin-top:0">Session ${esc(sid.slice(0,8))}</h2>
+        <div class="grid2">
+          <div><div class="esc-h">Cumulative cost per call</div>
+            <div id="sess-cost-chart"></div></div>
+          <div><div class="esc-h">Context fill per call</div>
+            <div id="sess-ctx-chart"></div></div>
+        </div>
+        <div class="esc-h" style="margin-top:18px">Models used in this session</div>
+        <div id="sess-models"></div>
+        <div class="esc-h" style="margin-top:18px">Prompts (${prompts.length})</div>
+        <div id="sess-prompts"></div>
+      </div>`;
+    areaChart($('#sess-cost-chart'), det.cost_curve || [], 'cumulative_usd',
+      'Cumulative cost per call', {
+        xKey: 'seq', fmt: axisMoney,
+        tooltip: p => `<b>call ${p.seq}</b><br>${money(p.cumulative_usd)} cumulative`,
+      });
+    areaChart($('#sess-ctx-chart'), det.context_fill_curve || [], 'pct',
+      'Context window fill per call', {
+        xKey: 'seq', fmt: v => v.toFixed(0) + '%',
+        tooltip: p => `<b>call ${p.seq}</b><br>${p.pct.toFixed(1)}% of context window`,
+      });
+    $('#sess-models').innerHTML = table([
+      {t:'Model', f:r => `<span class="swatch" style="background:${slotFor(r.model)}"></span>${esc(r.model)}`},
+      {t:'Calls', n:1, f:r => num(r.calls)},
+      {t:'Tokens', n:1, f:r => num(r.tokens)},
+      {t:'Cost', n:1, f:r => money(r.cost_usd)},
+    ], det.models_used || []);
+    $('#sess-prompts').innerHTML = table([
+      {t:'When', f:p => esc((p.ts||'').slice(0,16).replace('T',' '))},
+      {t:'Prompt', f:p => esc((p.text||'').slice(0,70))},
+      {t:'Est. tokens', n:1, f:p => num(p.est_tokens)},
+      {t:'', f:p => p.has_lab_evidence
+        ? `<button class="ev-lab" data-seq="${p.seq}">Open in Prompt Lab →</button>` : ''},
+    ], prompts);
+    $('#sess-prompts').querySelectorAll('.ev-lab').forEach(b => {
+      b.onclick = () => {
+        const p = prompts.find(x => String(x.seq) === b.dataset.seq);
+        if(!p) return;
+        document.querySelector('nav button[data-p="lab"]')?.click();
+        $('#lab-text').value = p.text;
+        LAB_SESSION = sid;
+        runLab();
+        $('#lab-text').scrollIntoView({behavior:'smooth', block:'center'});
+      };
+    });
+    el.scrollIntoView({behavior:'smooth', block:'start'});
+  });
+}
+
+/* ---------- playbook ---------- */
+const PB_HEADERS = {
+  claude: '# Guidelines (generated by AgentLens)\n\nRules below are ranked by what they\'ve '
+    + 'actually cost this project\'s sessions — not generic advice.\n',
+  agents: '# AGENTS.md — cost & workflow guidelines (generated by AgentLens)\n\nFollow these '
+    + 'when working in this repo; each is backed by measured cost, not opinion.\n',
+  junie: '# Junie guidelines (generated by AgentLens)\n\nRanked by measured cost impact in '
+    + 'this project\'s session history.\n',
+  markdown: '# AgentLens Playbook\n',
+};
+const PB_FILENAMES = {
+  claude: 'CLAUDE.md', agents: 'AGENTS.md', junie: 'guidelines.md', markdown: 'PLAYBOOK.md',
+};
+
+function renderPlaybook(d){
+  const rules = d.playbook || [];
+  if(!rules.length){
+    $('#pb-rules').innerHTML = '<p class="pb-empty">No recurring waste patterns found yet. '
+      + 'Once a few more sessions are ingested, rules generated from them will appear here.</p>';
+  } else {
+    $('#pb-rules').innerHTML = rules.map((r,i) => `
+      <div class="pb-rule">
+        <span class="pb-rank">${i+1}</span>
+        <div>
+          <p>${esc(r.text)}</p>
+          <div class="pb-evidence">$${r.evidence_usd.toFixed(2)} across ${r.occurrences} call(s)
+            — ${esc(r.source)}</div>
+        </div>
+      </div>`).join('');
+  }
+
+  // Bullets in the source markdown wrap across lines ("- foo\n  bar."), so a
+  // naive per-line split truncates every item at its first line break.
+  // Continuation lines (indented, not a new "- ") get folded back in.
+  const bullets = [];
+  (d.curated_reference || '').split('\n').forEach(raw => {
+    const line = raw.trim();
+    if(line.startsWith('- ')) bullets.push(line.slice(2));
+    else if(line && bullets.length) bullets[bullets.length - 1] += ' ' + line;
+  });
+  $('#pb-reference').innerHTML = `<ul>${bullets.map(b => `<li>${esc(b)}</li>`).join('')}</ul>`;
+}
+
+function playbookText(d, fmt){
+  const rules = d.playbook || [];
+  let out = PB_HEADERS[fmt] + '\n## Rules from your own history\n';
+  if(!rules.length){
+    out += '\nNo recurring waste patterns found yet.\n';
+  } else {
+    rules.forEach(r => {
+      out += `\n- ${r.text}\n  <!-- $${r.evidence_usd.toFixed(2)} across ${r.occurrences} call(s) -->`;
+    });
+    out += '\n';
+  }
+  out += '\n---\n' + (d.curated_reference || '');
+  return out;
+}
+
+$('#pb-copy')?.addEventListener('click', () => {
+  if(!DATA) return;
+  navigator.clipboard?.writeText(playbookText(DATA, $('#pb-format').value));
+  const btn = $('#pb-copy'); const prev = btn.textContent;
+  btn.textContent = 'Copied'; setTimeout(() => btn.textContent = prev, 1200);
+});
+$('#pb-download')?.addEventListener('click', () => {
+  if(!DATA) return;
+  const fmt = $('#pb-format').value;
+  const blob = new Blob([playbookText(DATA, fmt)], {type:'text/markdown'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = PB_FILENAMES[fmt];
+  a.click(); URL.revokeObjectURL(a.href);
+});
+
+/* ---------- agents & skills ---------- */
+function renderSkills(d){
+  const p = d.profile || {};
+  const bits = [];
+  if(p.primary_language) bits.push(`<b>${esc(p.primary_language)}</b> project`);
+  if(p.test_command) bits.push(`tests: <b>${esc(p.test_command)}</b>`);
+  if(p.package_manager) bits.push(esc(p.package_manager));
+  if((p.frameworks||[]).length) bits.push(esc(p.frameworks.join(', ')));
+  $('#sk-profile').innerHTML = `<div class="sk-prof">
+    ${bits.length ? bits.join(' · ') : 'Not enough data to characterise this project yet.'}
+    <div style="margin-top:6px;color:var(--text-muted);font-size:12px">
+      Inferred from ${num(p.sample_events)} events${p.confident ? ''
+        : ' <span class="thin">— thin sample, treat as a guess</span>'}.
+      No filesystem scan.
+    </div></div>`;
+
+  const list = d.suggestions || [];
+  if(!list.length){
+    $('#sk-list').innerHTML = '<div class="empty">Nothing to suggest. Suggestions come '
+      + 'from findings, and there aren\'t any worth acting on in this scope.</div>';
+    return;
+  }
+  $('#sk-list').innerHTML = list.map((s,i) => `
+    <article class="sk">
+      <div class="sk-head">
+        <span class="sk-kind">${esc(s.kind)}</span>
+        <span class="sk-title">${esc(s.title)}</span>
+        ${s.evidence_usd ? `<span class="sk-cost">${money(s.evidence_usd)}</span>` : ''}
+      </div>
+      <p class="sk-why">${esc(s.why)}</p>
+      <div class="sk-trig">triggered by: ${esc(s.triggered_by)}</div>
+      ${s.unverified_category ? `<div class="sk-warn">⚠ Described as a category —
+        AgentLens does not name packages it hasn't verified exist.</div>` : ''}
+      ${s.artifact ? `
+        <div class="sk-actions">
+          <span class="sk-path">${esc(s.artifact.path)}</span>
+          <button class="pb-btn sk-toggle" data-i="${i}">Preview</button>
+          <button class="pb-btn sk-dl" data-i="${i}">Download</button>
+          <button class="pb-btn sk-cp" data-i="${i}">Copy command</button>
+        </div>
+        <div class="sk-code" id="sk-code-${i}">
+          <pre>${esc(s.artifact.content)}</pre>
+          <div class="sk-cmd">Write it locally:
+            agentlens skills --init ${esc(s.id)} --write</div>
+        </div>` : ''}
+    </article>`).join('');
+
+  document.querySelectorAll('.sk-toggle').forEach(b => b.onclick = () => {
+    const el = $(`#sk-code-${b.dataset.i}`);
+    el.classList.toggle('on');
+    b.textContent = el.classList.contains('on') ? 'Hide' : 'Preview';
+  });
+  document.querySelectorAll('.sk-dl').forEach(b => b.onclick = () => {
+    const s = list[+b.dataset.i];
+    const blob = new Blob([s.artifact.content], {type:'text/plain'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = s.artifact.path.split('/').pop();
+    a.click(); URL.revokeObjectURL(a.href);
+  });
+  document.querySelectorAll('.sk-cp').forEach(b => b.onclick = () => {
+    const s = list[+b.dataset.i];
+    navigator.clipboard?.writeText(`agentlens skills --init ${s.id} --write`);
+    const prev = b.textContent; b.textContent = 'Copied';
+    setTimeout(() => b.textContent = prev, 1200);
+  });
+
+  // Generic, org-wide bucket — visually distinct (no cost pill, no
+  // "triggered by" line, since there genuinely isn't one) so it can never be
+  // mistaken for a suggestion derived from this user's data.
+  const generic = d.generic_suggestions || [];
+  $('#sk-generic').innerHTML = generic.length ? generic.map((s,i) => `
+    <article class="sk" style="border-left-color:var(--text-muted)">
+      <div class="sk-head">
+        <span class="sk-kind" style="color:var(--text-muted);border-color:var(--text-muted)">${esc(s.kind)}</span>
+        <span class="sk-title">${esc(s.title)}</span>
+      </div>
+      <p class="sk-why">${esc(s.why)}</p>
+      ${s.artifact ? `
+        <div class="sk-actions">
+          <span class="sk-path">${esc(s.artifact.path)}</span>
+          <button class="pb-btn sk-gtoggle" data-i="${i}">Preview</button>
+        </div>
+        <div class="sk-code" id="sk-gcode-${i}"><pre>${esc(s.artifact.content)}</pre></div>` : ''}
+    </article>`).join('') : '<div class="empty">No generic suggestions available.</div>';
+  document.querySelectorAll('.sk-gtoggle').forEach(b => b.onclick = () => {
+    const el = $(`#sk-gcode-${b.dataset.i}`);
+    el.classList.toggle('on');
+    b.textContent = el.classList.contains('on') ? 'Hide' : 'Preview';
+  });
+}
+
+/* ---------- engineering (section E) ---------- */
+function renderEngineering(d){
+  const m = d.engineering || {};
+  $('#eng-tiles').innerHTML = `
+    <div class="tile"><div class="k">Discovery share</div>
+      <div class="v">${(m.discovery_share_pct||0).toFixed(1)}%</div>
+      <div class="s">search/grep calls of ${num(m.total_agent_steps)} agent steps</div></div>
+    <div class="tile"><div class="k">Searches &amp; greps</div>
+      <div class="v">${num((m.searches||{}).total)}</div>
+      <div class="s">${num((m.searches||{}).project_search)} project search ·
+        ${num((m.searches||{}).shell_grep)} shell grep</div></div>
+    <div class="tile"><div class="k">Files opened</div>
+      <div class="v">${num(m.files_opened)}</div>
+      <div class="s">${num(m.files_opened_repeat)} opened 2+ times</div></div>
+    <div class="tile hero"><div class="k">Loop cost</div>
+      <div class="v">${money(m.loop_cost_usd||0)}</div>
+      <div class="s">wasted spend across loop-family findings</div></div>`;
+
+  $('#eng-searches').innerHTML = table([
+    {t:'Kind', f:r => esc(r.kind)},
+    {t:'Calls', n:1, f:r => num(r.calls)},
+  ], [
+    {kind: 'Project search (grep/glob)', calls: (m.searches||{}).project_search || 0},
+    {kind: 'Shell grep', calls: (m.searches||{}).shell_grep || 0},
+  ]);
+
+  $('#eng-loop').innerHTML = `<div class="tile" style="padding:12px 14px">
+    <div class="k">Loop-family findings</div>
+    <div class="v" style="font-size:22px">${money(m.loop_cost_usd||0)}</div>
+    <div class="s">sum of wasted_usd across loop, target_churn and
+      cross_session_loop findings in this scope</div></div>`;
+
+  // Same Suggestion objects section D produces for the triggered "discovery
+  // tools" case — second render location, no duplicate logic.
+  const disc = (d.suggestions || []).find(s => s.id === 'discovery-tools');
+  $('#eng-suggestion').innerHTML = disc ? `
+    <h2>Suggested from this tab's numbers</h2>
+    <article class="sk">
+      <div class="sk-head">
+        <span class="sk-kind">${esc(disc.kind)}</span>
+        <span class="sk-title">${esc(disc.title)}</span>
+      </div>
+      <p class="sk-why">${esc(disc.why)}</p>
+      <div class="sk-trig">triggered by: ${esc(disc.triggered_by)}</div>
+    </article>` : '';
+
+  // The number in the "Loop cost" tile is a sum. A sum with no examples is
+  // not actionable — this renders the actual loop/target_churn/
+  // cross_session_loop findings behind it, same cards (evidence, escalation,
+  // per-attempt breakdown, citation button) as the Waste tab, so there is
+  // always something concrete to click into from here, not just a total.
+  const LOOP_FAMILY = new Set(['loop', 'target_churn', 'cross_session_loop']);
+  const loopEntries = d.findings
+    .map((f, i) => ({f, i}))
+    .filter(x => LOOP_FAMILY.has(x.f.detector));
+  $('#eng-loop-findings').innerHTML = loopEntries.length
+    ? loopEntries.map(x => findingCardHTML(x.f, x.i)).join('')
+    : '<div class="empty">No loop-family findings in this scope — the tile above should '
+      + 'read $0.00. If it doesn\'t, that\'s a bug, not a habit to fix.</div>';
+}
+
+/* ---------- history (section F) ---------- */
+function renderHistory(d){
+  const h = d.history || {};
+  areaChart($('#chart-prompt-size'), h.size_over_time || [], 'tokens', 'Prompt size over time', {
+    xKey: 'ts', fmt: v => Math.round(v).toLocaleString(),
+    tooltip: p => `<b>${esc((p.ts||'').slice(0,16).replace('T',' '))}</b><br>${num(p.tokens)} tokens`,
+  });
+  areaChart($('#chart-prompt-quality'), h.quality_over_time || [], 'score', 'Prompt quality over time', {
+    xKey: 'ts', fmt: v => Math.round(v),
+    tooltip: p => `<b>${esc((p.ts||'').slice(0,16).replace('T',' '))}</b><br>score ${p.score}/100`,
+  });
+  $('#tbl-heaviest').innerHTML = table([
+    {t:'When', f:r => esc((r.ts||'').slice(0,16).replace('T',' '))},
+    {t:'Prompt', f:r => esc((r.excerpt||'').slice(0,80))},
+    {t:'Tokens', n:1, f:r => num(r.tokens)},
+    {t:'Score', n:1, f:r => r.score + '/100'},
+    {t:'', f:r => AGENTLENS_STATIC_DATA ? '' :
+      `<button class="ev-lab" data-sid="${esc(r.session_id)}" data-seq="${r.seq}">Open in Prompt Lab →</button>`},
+  ], h.heaviest_prompts || []);
+  $('#tbl-heaviest').querySelectorAll('.ev-lab').forEach(b => {
+    b.onclick = () => {
+      const row = (h.heaviest_prompts || []).find(
+        x => x.session_id === b.dataset.sid && String(x.seq) === b.dataset.seq);
+      if(!row) return;
+      document.querySelector('nav button[data-p="lab"]')?.click();
+      $('#lab-text').value = row.excerpt;
+      LAB_SESSION = row.session_id;
+      runLab();
+    };
+  });
+}
+
+/* ---------- prompt lab ---------- */
+let labTimer;
+/* Set when a prompt arrives from a finding, so the rewrite scaffold can be
+   filled from that session's real file/test/error rather than placeholders. */
+let LAB_SESSION = null;
+function runLab(){
+  const text = $('#lab-text').value;
+  $('#lab-counts').textContent = `${text.length} chars · ${text.trim() ? text.trim().split(/\s+/).length : 0} words`;
+  if(!text.trim()){
+    $('#lab-report').innerHTML =
+      '<div class="empty">Scored locally as you type. Nothing is sent anywhere.</div>';
+    return;
+  }
+  fetch('/api/lab', {method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({text, model: $('#lab-model').value, session_id: LAB_SESSION})})
+    .then(r => r.json()).then(r => {
+      const c = r.score >= 85 ? 'var(--good)' : r.score >= 55 ? 'var(--warning)' : 'var(--critical)';
+      $('#lab-report').innerHTML = `
+        <h2 style="margin-top:0">Prompt report</h2>
+        <div class="score" style="color:${c}">${r.score}<span
+          style="font-size:17px;color:var(--text-muted);font-weight:400">/100</span></div>
+        <p style="margin:8px 0 14px;color:var(--text-secondary)">${esc(r.verdict)}</p>
+        <div class="tiles" style="grid-template-columns:1fr 1fr;gap:9px;margin-bottom:14px">
+          <div class="tile" style="padding:11px 13px"><div class="k">Tokens</div>
+            <div class="v" style="font-size:21px">${num(r.tokens)}</div>
+            <div class="s">${r.context_pct.toFixed(2)}% of window</div></div>
+          <div class="tile" style="padding:11px 13px"><div class="k">Reclaimable</div>
+            <div class="v" style="font-size:21px">$${(r.reclaimable_usd||0).toFixed(4)}</div>
+            <div class="s">${r.saved_tokens ? '−' + r.saved_tokens + ' tok after cleanup' : 'no filler found'}</div></div>
+        </div>
+        ${r.issues.length ? r.issues.sort((a,b) => b.penalty - a.penalty).map(i => `
+          <div class="issue"><div class="h"><span class="pen">−${i.penalty}</span>
+            <b>${esc(i.label)}</b></div>
+            ${i.span ? `<div class="sp">found: "${esc(i.span)}"</div>` : ''}
+            <div class="fx">${esc(i.fix)}</div></div>`).join('')
+          : '<p style="color:var(--good)">Nothing wasteful found.</p>'}
+        ${(r.scaffold && r.issues.length) ? `
+          <div class="lab-rewrite">
+            <h3>Suggested rewrite ${LAB_SESSION ? '· filled from this session' : ''}</h3>
+            <pre>${esc(r.scaffold.text)}</pre>
+            ${Object.keys(r.scaffold.filled || {}).length ? `
+              <div class="lab-filled">Pulled from your history:
+                ${Object.keys(r.scaffold.filled).map(esc).join(', ')}</div>` : ''}
+            ${(r.scaffold.placeholders || []).length ? `
+              <div class="lab-filled">Still needs:
+                ${r.scaffold.placeholders.map(esc).join(', ')}</div>` : ''}
+          </div>` : ''}
+        ${r.content_budget ? `
+          <div class="lab-rewrite">
+            <h3>Token budget by content type</h3>
+            ${table([
+              {t:'Type', f:x => esc(x.type)},
+              {t:'Tokens', n:1, f:x => num(x.tokens)},
+            ], [
+              {type:'Code', tokens: r.content_budget.code_tokens},
+              {type:'File/path refs', tokens: r.content_budget.path_tokens},
+              {type:'Prose', tokens: r.content_budget.prose_tokens},
+            ])}
+          </div>` : ''}
+        ${(r.models_compared && r.models_compared.length > 1) ? `
+          <div class="lab-rewrite">
+            <h3>Same prompt across models · cheapest first</h3>
+            ${table([
+              {t:'Model', f:x => esc(x.model)},
+              {t:'Tokens', n:1, f:x => num(x.tokens)},
+              {t:'Cost', n:1, f:x => '$' + x.cost_usd.toFixed(4)},
+            ], r.models_compared)}
+          </div>` : ''}`;
+    });
+}
+$('#lab-text').addEventListener('input', () => {
+  clearTimeout(labTimer); labTimer = setTimeout(runLab, 180);
+});
+$('#lab-model').addEventListener('change', runLab);
+
+/* ---------- filters ---------- */
+function fillSelect(el, options, keep){
+  const cur = keep ?? el.value;
+  const first = el.querySelector('option');
+  el.innerHTML = '';
+  el.appendChild(first);
+  options.forEach(o => {
+    const opt = document.createElement('option');
+    opt.value = o.value; opt.textContent = o.label;
+    el.appendChild(opt);
+  });
+  el.value = cur || '';
+}
+
+function populateFilters(d){
+  const sc = d.scopes || {};
+  fillSelect($('#f-project'), (sc.projects || []).map(p => ({
+    value: p.repo_id, label: `${p.label} (${p.sessions})`,
+  })));
+  fillSelect($('#f-provider'), (sc.providers || []).map(p => ({value: p, label: p})));
+  fillSelect($('#f-session'), (sc.sessions || []).slice(0, 100).map(s => ({
+    value: s.session_id,
+    label: `${(s.started_at || '').slice(0,10)} · ${money(s.cost_usd)} · ${s.session_id.slice(0,8)}`,
+  })));
+  const a = d.active_scope || {};
+  $('#f-project').value = a.repo_id || '';
+  $('#f-provider').value = a.provider || '';
+  $('#f-days').value = a.days ? String(a.days) : '';
+  $('#f-session').value = a.session_id || '';
+  const t = d.totals || {};
+  $('#f-status').textContent =
+    `${t.sessions || 0} session(s) · ${money(t.cost_usd || 0)}`;
+}
+
+function currentQuery(){
+  const p = new URLSearchParams();
+  const proj = $('#f-project').value, prov = $('#f-provider').value;
+  const days = $('#f-days').value, sess = $('#f-session').value;
+  if(proj) p.set('repo_id', proj);
+  if(prov) p.set('provider', prov);
+  if(days) p.set('days', days);
+  if(sess) p.set('session_id', sess);
+  return p.toString();
+}
+
+function reload(){
+  $('#f-status').textContent = 'loading…';
+  fetch('/api/data' + (currentQuery() ? '?' + currentQuery() : ''))
+    .then(r => r.json()).then(boot)
+    .catch(e => { $('#f-status').textContent = 'error: ' + e.message; });
+}
+
+['#f-project','#f-provider','#f-days','#f-session'].forEach(sel => {
+  $(sel)?.addEventListener('change', reload);
+});
+$('#f-reset')?.addEventListener('click', () => {
+  ['#f-project','#f-provider','#f-days','#f-session'].forEach(s => $(s).value = '');
+  reload();
+});
+
+/* ---------- boot ---------- */
+function boot(d){
+  DATA = d;
+  if(d.error){ document.querySelector('main').innerHTML =
+    `<div class="empty">${esc(d.error)}</div>`; return; }
+  if(!AGENTLENS_STATIC_DATA) populateFilters(d);
+  renderWaste(d); renderOverview(d); renderSessions(d); renderPlaybook(d); renderSkills(d);
+  renderEngineering(d); renderHistory(d);
+  // Runs once per data snapshot, after every container that can hold a
+  // `.finding` card (Waste tab, Engineering tab) has rendered — see
+  // `wireFindingCards`'s own comment for why this must be last, not per-panel.
+  wireFindingCards(d);
+}
+
+if(AGENTLENS_STATIC_DATA){
+  // Static export: no server, no /api/lab — Prompt Lab needs a live scorer,
+  // so it's hidden rather than shipping a second, driftable JS port of the
+  // scoring rubric. Everything else (charts, findings, playbook) is fully
+  // baked in and works from file:// with zero network.
+  document.querySelector('nav button[data-p="lab"]')?.remove();
+  const badge = document.querySelector('.badge');
+  if(badge){
+    badge.textContent = 'static export';
+    badge.title = AGENTLENS_STATIC_DATA.generated_at
+      ? `Generated ${AGENTLENS_STATIC_DATA.generated_at}` : '';
+  }
+  // Filters need a server to re-query; state the baked scope instead of
+  // showing controls that would silently do nothing.
+  const a = AGENTLENS_STATIC_DATA.active_scope || {};
+  const bits = [];
+  if(a.project_label) bits.push(`project <b>${esc(a.project_label)}</b>`);
+  if(a.provider) bits.push(`agent <b>${esc(a.provider)}</b>`);
+  if(a.days) bits.push(`last <b>${a.days}</b> days`);
+  if(a.session_id) bits.push(`session <b>${esc(a.session_id.slice(0,8))}</b>`);
+  $('#filters')?.remove();
+  const cap = $('#scope-caption');
+  if(cap){
+    cap.hidden = false;
+    cap.innerHTML = 'Scope: ' + (bits.length ? bits.join(' · ') : '<b>everything</b>')
+      + (AGENTLENS_STATIC_DATA.generated_at
+          ? ` · generated ${esc(AGENTLENS_STATIC_DATA.generated_at.replace('T',' '))}` : '')
+      + (AGENTLENS_STATIC_DATA.redacted ? ' · redacted' : '');
+  }
+  boot(AGENTLENS_STATIC_DATA);
+} else {
+  fetch('/api/data').then(r => r.json()).then(boot).catch(e => {
+    $('#findings').innerHTML = `<div class="empty">Could not load data: ${esc(e.message)}</div>`;
+  });
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push: { branches: [main] }
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # Cross-platform is a hard requirement: agent history lives in
+        # different places on each OS and path handling is where adapters break.
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python: ["3.10", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "${{ matrix.python }}" }
+      - run: pip install -e ".[dev]"
+      - run: ruff check src tests fixtures
+      - run: pytest -q
+
+  no-real-data:
+    # Guard against ever committing a real session file.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fail if non-synthetic history is committed
+        run: |
+          if git ls-files | grep -E '(^|/)(history\.json|.*\.db)$'; then
+            echo "::error::Real agent history must never be committed."
+            exit 1
+          fi

@@ -1,0 +1,56 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "agentlens-cli"
+version = "0.4.0"
+description = "Find out why your coding agent is expensive — offline waste detection, loop detection and skill generation across 7 coding agents."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Jalpesh Rajani" }]
+keywords = ["claude-code", "codex", "junie", "llm", "tokens", "cost", "observability", "ai-agents"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Environment :: Console",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Software Development :: Quality Assurance",
+]
+
+# Deliberately tiny. `rich` is the only hard dependency so that
+# `uvx agentlens-cli` is fast on every platform and works fully offline.
+dependencies = ["rich>=13.0"]
+
+[project.optional-dependencies]
+# Exact tokenization for Prompt Lab. Without it we fall back to a
+# character-ratio heuristic, which is fine for relative comparisons.
+tokenizers = ["tiktoken>=0.7"]
+dev = ["pytest>=8.0", "ruff>=0.6", "mypy>=1.11"]
+# Not in `dev` on purpose — one browser-driven test (test_static_export.py)
+# uses it via `pytest.importorskip`, and skips cleanly without it. Adding it
+# to the default dev install would force every contributor to download
+# browser binaries just to run the unit test suite.
+test-browser = ["playwright>=1.40"]
+
+[project.scripts]
+agentlens = "agentlens.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/jalpesh/AgentLens"
+Issues = "https://github.com/jalpesh/AgentLens/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/agentlens"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
