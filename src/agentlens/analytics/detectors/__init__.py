@@ -88,6 +88,26 @@ def run_all(sessions: list[list[Event]]) -> list[Finding]:
         findings.extend(run_session(evs))
     merged = merge(findings)
     merged.extend(run_global(sessions))
+
+    # Backstop, not the primary fix: `merge()` sums each detector's per-session
+    # `wasted_usd` with no ceiling, so any detector with an overlap or
+    # double-count bug we haven't (yet) found and fixed at the source can still
+    # report a finding costing more than every session it drew from combined.
+    # Two prior spot-fixes (`rollups.engineering_metrics`'s loop_cost_usd and
+    # `server.py`'s aggregate `reclaimable`) capped the *sum across findings*
+    # downstream, but never touched an individual finding's own `wasted_usd` —
+    # so a single finding could still show a number bigger than the user's
+    # entire analyzed spend even after those fixes, which is exactly what real
+    # usage data surfaced (target_churn and loop findings each individually
+    # exceeding total spend, 2026-08-16). Capping every finding here, at the
+    # one place all of them pass through, makes "a finding costs more than you
+    # spent" structurally impossible instead of "impossible until the next
+    # detector ships with the same bug."
+    total_spend = sum(e.cost_usd for evs in sessions for e in evs)
+    for f in merged:
+        if f.wasted_usd > total_spend:
+            f.wasted_usd = total_spend
+
     return sorted(merged, key=lambda f: (-f.wasted_usd, -f.occurrences))
 
 

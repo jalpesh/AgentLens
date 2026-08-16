@@ -276,6 +276,17 @@ class LoopDetector(Detector):
         if not evidence:
             return None
 
+        # Two or more distinct signatures in the same session each run their own
+        # `cost_between(first-1, last)` window — and those windows can overlap
+        # (e.g. signature A spans seq 10-50, signature B spans seq 20-60), so
+        # summing across signatures naively double-counts the events in the
+        # overlap. Bounding the total at what this session actually cost makes
+        # that structurally impossible rather than merely unlikely — caught via
+        # real usage data where a single session's loop finding otherwise
+        # summed to several times the session's real spend, 2026-08-16.
+        session_cost = sum(e.cost_usd for e in events)
+        wasted = min(wasted, session_cost)
+
         return self.emit(
             Finding(
                 detector=self.name,
@@ -383,6 +394,16 @@ class SameTargetChurnDetector(Detector):
 
         if not evidence:
             return None
+
+        # Same overlap problem as `LoopDetector` above: a session with several
+        # churned files computes one `cost_between` window per file, and those
+        # windows can overlap when the files were being edited in the same
+        # stretch of the session — summing them then double-counts the shared
+        # events. Bound the total at the session's real spend so it can never
+        # exceed what this session actually cost, no matter how many files
+        # overlapped. Caught via real usage data, 2026-08-16.
+        session_cost = sum(e.cost_usd for e in events)
+        wasted = min(wasted, session_cost)
 
         return self.emit(
             Finding(

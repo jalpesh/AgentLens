@@ -9,6 +9,10 @@ history.json
 # run.sh's pidfile/logfile — machine-local, never something to commit.
 .agentlens.pid
 .agentlens.log
+# `agentlens export`/`report --html` output. Redacted, but still built from
+# real personal usage — never something to commit by habit (`git add -A`).
+audit.json
+audit.html
 !fixtures/**/*.jsonl
 
 __pycache__/

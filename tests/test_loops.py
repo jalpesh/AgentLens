@@ -376,3 +376,129 @@ def test_engineering_loop_cost_tile_is_capped_at_total_spend():
     )
     metrics = rollups.engineering_metrics(sessions, [bogus])
     assert metrics["loop_cost_usd"] <= round(total_spend, 4) + 1e-6
+
+
+# --- regression: a single session's finding cannot exceed that session's ----
+# --- own spend (found via real usage data, 2026-08-16) ----------------------
+#
+# The three regressions above fixed CrossSessionLoopDetector and two
+# downstream *aggregate* rollups. They did not fix — and real usage data
+# immediately exposed — that `LoopDetector` and `SameTargetChurnDetector` each
+# sum a separate `cost_between(...)` window per signature / per churned file
+# within ONE session, and those windows can overlap. A session with three
+# overlapping churned files (or three overlapping failure signatures) had its
+# overlapping events counted once per file/signature, so a single finding
+# could report several times what that one session actually cost — e.g.
+# target_churn reporting $8,666 against a dataset that only ever spent
+# $3,298 total. These tests build that exact overlap shape.
+
+
+def _session_with_overlapping_churn(session_id, n_files=4, edits_per_file=5,
+                                     cost_per_event=1.0):
+    """One session, several files, each edited `edits_per_file` times with a
+    failure between each edit — but the files' edit spans all overlap (they're
+    interleaved in the same stretch of the session), which is exactly the
+    shape that let each file's window double-count the others' events."""
+    from agentlens.schema import Event, Provider, Role, ToolInfo
+    from agentlens.schema import ToolKind as TK
+
+    events = []
+    seq = 0
+    # Interleave edits to N files across the same seq range, so every file's
+    # [first_edit, last_edit] window spans nearly the whole session.
+    for _round in range(edits_per_file):
+        for fi in range(n_files):
+            events.append(Event(
+                session_id=session_id, provider=Provider.CLAUDE_CODE, seq=seq,
+                ts=f"2026-01-01T00:00:{seq:02d}", role=Role.TOOL_CALL,
+                usage=None, cost_usd=cost_per_event,
+                tool=ToolInfo(kind=TK.EDIT, target_path=f"src/file{fi}.py"),
+            ))
+            seq += 1
+            events.append(Event(
+                session_id=session_id, provider=Provider.CLAUDE_CODE, seq=seq,
+                ts=f"2026-01-01T00:00:{seq:02d}", role=Role.TOOL_RESULT,
+                usage=None, cost_usd=0.0,
+                tool=ToolInfo(kind=TK.BASH, exit_code=1,
+                               error_text=f"AssertionError: file{fi} still broken"),
+            ))
+            seq += 1
+    return events
+
+
+def test_target_churn_cannot_exceed_this_sessions_own_spend():
+    from agentlens.analytics.detectors import SameTargetChurnDetector
+
+    events = _session_with_overlapping_churn("sess-churn")
+    session_cost = sum(e.cost_usd for e in events)
+
+    f = SameTargetChurnDetector().run(events)
+    assert f is not None
+    assert f.wasted_usd <= session_cost + 1e-9, (
+        f"target_churn waste (${f.wasted_usd:.2f}) exceeded this session's own "
+        f"spend (${session_cost:.2f}) — the exact shape found in real usage data"
+    )
+
+
+def _session_with_overlapping_loops(session_id, n_signatures=3, repeats=4,
+                                     cost_per_event=1.0):
+    """One session, several distinct (specific-enough) failure signatures,
+    interleaved across the same seq range so each signature's occurrence
+    window overlaps the others'."""
+    from agentlens.schema import Event, Provider, Role, ToolInfo
+    from agentlens.schema import ToolKind as TK
+
+    # Distinguish signatures by a *word*, not a digit — `signature()` strips
+    # standalone digits as volatile (line numbers, counts), so an index alone
+    # would collapse every "signature" into the same one and the fixture
+    # would fail to reproduce the overlap this test exists to catch.
+    words = ["alpha", "bravo", "charlie", "delta", "echo", "foxtrot"]
+    events = []
+    seq = 0
+    for _round in range(repeats):
+        for si in range(n_signatures):
+            events.append(Event(
+                session_id=session_id, provider=Provider.CLAUDE_CODE, seq=seq,
+                ts=f"2026-01-01T00:00:{seq:02d}", role=Role.ASSISTANT,
+                usage=None, cost_usd=cost_per_event,
+            ))
+            seq += 1
+            events.append(Event(
+                session_id=session_id, provider=Provider.CLAUDE_CODE, seq=seq,
+                ts=f"2026-01-01T00:00:{seq:02d}", role=Role.TOOL_RESULT,
+                usage=None, cost_usd=0.0,
+                tool=ToolInfo(kind=TK.BASH, exit_code=1,
+                               error_text=f"AssertionError: {words[si % len(words)]} target still broken"),
+            ))
+            seq += 1
+    return events
+
+
+def test_loop_detector_cannot_exceed_this_sessions_own_spend():
+    from agentlens.analytics.detectors import LoopDetector
+
+    events = _session_with_overlapping_loops("sess-loop")
+    session_cost = sum(e.cost_usd for e in events)
+
+    f = LoopDetector().run(events)
+    assert f is not None
+    assert f.wasted_usd <= session_cost + 1e-9, (
+        f"loop waste (${f.wasted_usd:.2f}) exceeded this session's own spend "
+        f"(${session_cost:.2f}) — the exact shape found in real usage data"
+    )
+
+
+def test_run_all_caps_every_individual_finding_at_total_spend():
+    """The central backstop in `run_all()`: even a detector bug we haven't
+    found yet cannot produce a finding costing more than every session in the
+    report combined — not just the aggregate tiles downstream, the finding
+    itself."""
+    sessions = [_session_with_overlapping_churn(f"sess-{i}") for i in range(3)]
+    total_spend = sum(e.cost_usd for evs in sessions for e in evs)
+
+    findings = run_all(sessions)
+    for f in findings:
+        assert f.wasted_usd <= total_spend + 1e-9, (
+            f"{f.detector} finding (${f.wasted_usd:.2f}) exceeded total analyzed "
+            f"spend (${total_spend:.2f})"
+        )
