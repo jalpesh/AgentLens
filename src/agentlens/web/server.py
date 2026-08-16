@@ -36,6 +36,7 @@ from ..analytics import (
 )
 from ..analytics.detectors import run_all
 from ..redact import redact_obj
+from ..schema import Provider, Usage
 from ..store import Store
 
 STATIC = Path(__file__).parent / "static"
@@ -65,6 +66,55 @@ _CITATION_MAX_BYTES = 512_000
 _ABS_PATH_RE = re.compile(r"^(/|[A-Za-z]:[\\/]|\\\\)")
 
 
+def _apply_dismissals(findings: list, dismissed: set[tuple[str, str, str]]) -> list:
+    """Filter dismissed evidence out of findings and recompute the numbers
+    that describe what's left, rather than leaving a finding's headline
+    dollar figure counting evidence the person already said wasn't waste.
+
+    A finding whose *every* piece of evidence gets dismissed is dropped
+    entirely — "0 occurrences, $0.00 wasted" is not a habit worth a card.
+    `wasted_usd`/`wasted_tokens` are recomputed as the sum over the evidence
+    that survives, which is an approximation for detectors whose original
+    figure came from a window computation rather than a literal sum of
+    per-evidence costs (see loops.py) — the alternative, leaving the old
+    total in place after evidence was removed from under it, would be a
+    number the remaining evidence can't account for, which is worse.
+    """
+    import dataclasses
+
+    kept: list = []
+    for f in findings:
+        surviving = [
+            e for e in f.evidence if (f.detector, e.session_id, e.ts) not in dismissed
+        ]
+        if not surviving:
+            continue
+        if len(surviving) != len(f.evidence):
+            f = dataclasses.replace(
+                f,
+                evidence=surviving,
+                occurrences=len(surviving),
+                wasted_usd=round(sum(e.cost_usd for e in surviving), 6),
+                wasted_tokens=sum(e.tokens for e in surviving),
+            )
+        kept.append(f)
+    return kept
+
+
+def _exclude_manual(sessions: list[list]) -> list[list]:
+    """Drop manually-entered sessions (see `Provider.MANUAL`) before handing
+    events to anything that reasons over turn-by-turn behaviour — detectors,
+    the project fingerprint. A manual session is one synthetic aggregate
+    event with no prompts and no tool calls, so in practice no detector
+    would ever fire on it regardless of this filter; this exists as an
+    explicit, testable guarantee rather than relying on that being true
+    forever as detectors change, and the filter itself carries no privacy
+    weight either way — it just decides what a manual entry is allowed to
+    influence.
+    """
+    return [evs for evs in sessions if evs and evs[0].provider != Provider.MANUAL]
+
+
 def build_payload(
     db: str | None,
     provider: str | None = None,
@@ -87,9 +137,18 @@ def build_payload(
         # the user can't navigate back out of.
         all_projects = store.projects()
         all_sessions = store.sessions_index(limit=300)
+        dismissed = store.dismissed_keys()
+        dismissed_count = store.dismissed_count()
 
-    findings = run_all(sessions)
-    profile = fingerprint_all(sessions)
+    # Manually-entered sessions belong in totals and charts (that's the whole
+    # point of adding them) but not in anything that reasons over
+    # turn-by-turn behaviour — see `_exclude_manual`.
+    real_sessions = _exclude_manual(sessions)
+
+    findings = run_all(real_sessions)
+    if dismissed:
+        findings = _apply_dismissals(findings, dismissed)
+    profile = fingerprint_all(real_sessions)
     totals = rollups.totals(sessions)
     # Different detectors can legitimately point at overlapping evidence in
     # the same session (a session can be flagged by more than one detector),
@@ -114,6 +173,7 @@ def build_payload(
         "by_provider": rollups.by_provider(sessions),
         "tool_mix": rollups.tool_mix(sessions),
         "findings": [f.to_dict() for f in findings],
+        "dismissed_count": dismissed_count,
         "playbook": [r.to_dict() for r in build_playbook(findings)],
         "curated_reference": CURATED_REFERENCE,
         # Suggestions and the project profile ride along in the same payload,
@@ -332,8 +392,17 @@ def make_handler(db: str | None):
             except Exception as exc:  # never let a citation request crash the server
                 return {"available": False, "reason": f"unexpected error: {exc}"}
 
+        def _read_json_body(self) -> dict:
+            n = int(self.headers.get("Content-Length") or 0)
+            body = json.loads(self.rfile.read(n) or b"{}")
+            return body if isinstance(body, dict) else {}
+
         def do_POST(self) -> None:  # noqa: N802
             u = urlparse(self.path)
+            if u.path == "/api/dismiss":
+                return self._dismiss()
+            if u.path == "/api/manual-session":
+                return self._manual_session()
             if u.path != "/api/lab":
                 return self._json({"error": "not found"}, 404)
             try:
@@ -368,6 +437,72 @@ def make_handler(db: str | None):
                 ]
                 out["content_budget"] = content_type_budget(text, model)
                 self._json(out)
+            except Exception as exc:
+                self._json({"error": str(exc)}, 500)
+
+        def _dismiss(self) -> None:
+            """Mark one piece of evidence as "not waste" — see `Store.dismiss_evidence`.
+            Idempotent: dismissing the same evidence twice is a no-op, not an
+            error, so a double-click or a stale second tab can't misbehave."""
+            try:
+                body = self._read_json_body()
+                detector = str(body.get("detector") or "")
+                session_id = str(body.get("session_id") or "")
+                ts = str(body.get("ts") or "")
+                if not (detector and session_id and ts):
+                    return self._json(
+                        {"error": "detector, session_id and ts are all required"}, 400
+                    )
+                reason = body.get("reason")
+                reason = str(reason).strip()[:500] if reason else None
+                with Store(db) as store:
+                    store.dismiss_evidence(detector, session_id, ts, reason)
+                    total = store.dismissed_count()
+                self._json({"ok": True, "dismissed_total": total})
+            except Exception as exc:
+                self._json({"error": str(exc)}, 500)
+
+        def _manual_session(self) -> None:
+            """The dashboard's other write endpoint — see `Store.add_manual_session`
+            and `Provider.MANUAL`'s docstring. Local-only (127.0.0.1 by
+            default), add-only: there is no edit here, and removal is a CLI
+            command (`agentlens sessions --remove <id>`) on purpose, so an
+            accidental click can't quietly delete something typed in five
+            minutes ago."""
+            try:
+                body = self._read_json_body()
+                label = str(body.get("label") or "").strip()
+                if not label:
+                    return self._json({"error": "a project/tool label is required"}, 400)
+                date = str(body.get("date") or "").strip()
+                model = (str(body.get("model") or "").strip()) or None
+
+                def _int(key: str) -> int:
+                    try:
+                        return max(0, int(body.get(key) or 0))
+                    except (TypeError, ValueError):
+                        return 0
+
+                usage = Usage(input=_int("tokens_input"), output=_int("tokens_output"))
+                cost_override = body.get("cost_usd")
+                if cost_override in (None, ""):
+                    from ..pricing import cost_of
+
+                    cost_usd = cost_of(model, usage)
+                else:
+                    try:
+                        cost_usd = max(0.0, float(cost_override))
+                    except (TypeError, ValueError):
+                        return self._json({"error": "cost_usd must be a number"}, 400)
+
+                import uuid
+                from datetime import datetime
+
+                ts = f"{date}T00:00:00" if date else datetime.now().isoformat(timespec="seconds")
+                session_id = f"manual-{uuid.uuid4().hex[:16]}"
+                with Store(db) as store:
+                    store.add_manual_session(session_id, ts, label, model, usage, cost_usd)
+                self._json({"ok": True, "session_id": session_id, "cost_usd": round(cost_usd, 6)})
             except Exception as exc:
                 self._json({"error": str(exc)}, 500)
 

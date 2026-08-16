@@ -482,6 +482,20 @@ def cmd_lab(args) -> int:
 
 
 def cmd_sessions(args) -> int:
+    if getattr(args, "remove", None):
+        with _open_store(args) as store:
+            removed = store.remove_manual_session(args.remove)
+        if removed:
+            console.print(f"[green]Removed[/green] manual session {args.remove}.")
+            return 0
+        console.print(
+            f"[yellow]Nothing removed.[/yellow] {args.remove!r} isn't a manually-entered "
+            "session in this database (only sessions added via the dashboard's "
+            "\"add a session\" form can be removed this way — real ingested history "
+            "never can)."
+        )
+        return 1
+
     with _open_store(args) as store:
         sc = _scope(args, store)
         sessions = store.sessions(sc["provider"], sc["since"], sc["repo_id"], sc["session_id"])
@@ -754,6 +768,11 @@ def build_parser() -> argparse.ArgumentParser:
 
     s = common(sub.add_parser("sessions", help="per-session breakdown"))
     s.add_argument("--limit", type=int, default=25)
+    s.add_argument(
+        "--remove", metavar="SESSION_ID",
+        help="remove a manually-entered session (added via the dashboard's "
+        "\"add a session\" form) — real ingested history is never touched",
+    )
     s.set_defaults(func=cmd_sessions)
 
     sk = common(sub.add_parser(

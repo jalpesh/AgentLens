@@ -29,6 +29,15 @@ class Provider(str, Enum):
     GOOSE = "goose"
     CURSOR = "cursor"
     WINDSURF = "windsurf"
+    #: Not a real adapter — no discover()/parse() implementation exists for
+    #: this value. It tags session-level data a person typed into the
+    #: dashboard's manual-import form for a tool AgentLens doesn't (yet)
+    #: support, so it can be counted in totals/charts while staying visibly
+    #: and structurally distinct from anything a real adapter produced (see
+    #: `web/server.py`'s manual-session endpoint and the "manual" badge in
+    #: the dashboard). Carries no turn-by-turn events, so it must never
+    #: surface a detector finding — there is nothing to find a pattern in.
+    MANUAL = "manual"
 
 
 class Role(str, Enum):
