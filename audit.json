@@ -1,0 +1,2537 @@
+{
+  "agentlens_version": "0.4.0",
+  "generated_at": "2026-08-16T11:32:43",
+  "redacted": true,
+  "totals": {
+    "sessions": 77,
+    "cost_usd": 3298.4001,
+    "tokens": 3155338254,
+    "input": 539617338,
+    "output": 9964640,
+    "cache_read": 2497606256,
+    "cache_write": 107892340,
+    "cache_hit_pct": 82.2,
+    "compactions": 77
+  },
+  "by_model": [
+    {
+      "model": "claude-opus-4-8",
+      "calls": 1055,
+      "tokens": 600915232,
+      "cost_usd": 1648.047361,
+      "cache_read": 561685121,
+      "input": 91392,
+      "output": 1249739,
+      "cache_hit_pct": 100.0
+    },
+    {
+      "model": "gpt-5.5",
+      "calls": 2554,
+      "tokens": 727500624,
+      "cost_usd": 516.280546,
+      "cache_read": 356101376,
+      "input": 370539955,
+      "output": 709106,
+      "cache_hit_pct": 49.0
+    },
+    {
+      "model": "claude-sonnet-4-6",
+      "calls": 8473,
+      "tokens": 912018381,
+      "cost_usd": 492.520561,
+      "cache_read": 866221062,
+      "input": 142003,
+      "output": 5424071,
+      "cache_hit_pct": 100.0
+    },
+    {
+      "model": "claude-opus-4-7",
+      "calls": 423,
+      "tokens": 47591770,
+      "cost_usd": 276.26077,
+      "cache_read": 37922397,
+      "input": 850,
+      "output": 676971,
+      "cache_hit_pct": 100.0
+    },
+    {
+      "model": "gpt-5.4",
+      "calls": 1032,
+      "tokens": 299467594,
+      "cost_usd": 214.893142,
+      "cache_read": 145220224,
+      "input": 153798067,
+      "output": 356201,
+      "cache_hit_pct": 48.6
+    },
+    {
+      "model": "claude-opus-4-6",
+      "calls": 681,
+      "tokens": 39534987,
+      "cost_usd": 121.956605,
+      "cache_read": 36896421,
+      "input": 4037,
+      "output": 304960,
+      "cache_hit_pct": 100.0
+    },
+    {
+      "model": "claude-haiku-4-5-20251001",
+      "calls": 1615,
+      "tokens": 150982202,
+      "cost_usd": 25.746171,
+      "cache_read": 142743741,
+      "input": 159163,
+      "output": 323603,
+      "cache_hit_pct": 99.9
+    },
+    {
+      "model": "gpt-5.1-codex-max",
+      "calls": 48,
+      "tokens": 2395887,
+      "cost_usd": 1.817203,
+      "cache_read": 1135744,
+      "input": 1248708,
+      "output": 7211,
+      "cache_hit_pct": 47.6
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "calls": 14,
+      "tokens": 1097121,
+      "cost_usd": 0.877764,
+      "cache_read": 489344,
+      "input": 601277,
+      "output": 5648,
+      "cache_hit_pct": 44.9
+    },
+    {
+      "model": "claude-fable-5",
+      "calls": 898,
+      "tokens": 257709728,
+      "cost_usd": 0.0,
+      "cache_read": 248338423,
+      "input": 72116,
+      "output": 568086,
+      "cache_hit_pct": 100.0
+    },
+    {
+      "model": "claude-sonnet-5",
+      "calls": 522,
+      "tokens": 93251961,
+      "cost_usd": 0.0,
+      "cache_read": 90896051,
+      "input": 73490,
+      "output": 318224,
+      "cache_hit_pct": 99.9
+    },
+    {
+      "model": "codex-auto-review",
+      "calls": 240,
+      "tokens": 22872013,
+      "cost_usd": 0.0,
+      "cache_read": 9956352,
+      "input": 12885784,
+      "output": 20562,
+      "cache_hit_pct": 43.6
+    }
+  ],
+  "by_provider": [
+    {
+      "provider": "claude-code",
+      "sessions": 8,
+      "tokens": 2102004261,
+      "cost_usd": 2564.531469
+    },
+    {
+      "provider": "codex",
+      "sessions": 39,
+      "tokens": 1053333993,
+      "cost_usd": 733.868655
+    },
+    {
+      "provider": "gemini-cli",
+      "sessions": 30,
+      "tokens": 0,
+      "cost_usd": 0.0
+    }
+  ],
+  "daily": [
+    {
+      "date": "2025-12-11",
+      "cost_usd": 1.817203,
+      "tokens": 2395887,
+      "sessions": 1
+    },
+    {
+      "date": "2026-04-13",
+      "cost_usd": 138.863584,
+      "tokens": 68936168,
+      "sessions": 2
+    },
+    {
+      "date": "2026-04-14",
+      "cost_usd": 6.961328,
+      "tokens": 15174107,
+      "sessions": 2
+    },
+    {
+      "date": "2026-04-15",
+      "cost_usd": 36.278427,
+      "tokens": 74473199,
+      "sessions": 2
+    },
+    {
+      "date": "2026-04-16",
+      "cost_usd": 29.870222,
+      "tokens": 130879577,
+      "sessions": 1
+    },
+    {
+      "date": "2026-04-17",
+      "cost_usd": 17.723948,
+      "tokens": 31759296,
+      "sessions": 1
+    },
+    {
+      "date": "2026-04-18",
+      "cost_usd": 7.355033,
+      "tokens": 15379512,
+      "sessions": 1
+    },
+    {
+      "date": "2026-04-19",
+      "cost_usd": 66.708072,
+      "tokens": 27402938,
+      "sessions": 2
+    },
+    {
+      "date": "2026-04-20",
+      "cost_usd": 21.969958,
+      "tokens": 8295172,
+      "sessions": 1
+    },
+    {
+      "date": "2026-04-21",
+      "cost_usd": 150.298173,
+      "tokens": 98988420,
+      "sessions": 2
+    },
+    {
+      "date": "2026-04-24",
+      "cost_usd": 0.495282,
+      "tokens": 414267,
+      "sessions": 1
+    },
+    {
+      "date": "2026-04-26",
+      "cost_usd": 17.847396,
+      "tokens": 33943213,
+      "sessions": 1
+    },
+    {
+      "date": "2026-04-28",
+      "cost_usd": 32.863303,
+      "tokens": 53320678,
+      "sessions": 2
+    },
+    {
+      "date": "2026-04-30",
+      "cost_usd": 17.634451,
+      "tokens": 26066454,
+      "sessions": 2
+    },
+    {
+      "date": "2026-05-01",
+      "cost_usd": 26.673486,
+      "tokens": 5871458,
+      "sessions": 1
+    },
+    {
+      "date": "2026-05-02",
+      "cost_usd": 132.066614,
+      "tokens": 104726165,
+      "sessions": 6
+    },
+    {
+      "date": "2026-05-03",
+      "cost_usd": 40.430575,
+      "tokens": 67662325,
+      "sessions": 7
+    },
+    {
+      "date": "2026-05-04",
+      "cost_usd": 58.491728,
+      "tokens": 93769587,
+      "sessions": 5
+    },
+    {
+      "date": "2026-05-08",
+      "cost_usd": 2.017656,
+      "tokens": 2699504,
+      "sessions": 2
+    },
+    {
+      "date": "2026-05-09",
+      "cost_usd": 45.64989,
+      "tokens": 64678403,
+      "sessions": 3
+    },
+    {
+      "date": "2026-05-10",
+      "cost_usd": 71.718634,
+      "tokens": 105040972,
+      "sessions": 6
+    },
+    {
+      "date": "2026-05-11",
+      "cost_usd": 139.935132,
+      "tokens": 222519908,
+      "sessions": 13
+    },
+    {
+      "date": "2026-05-16",
+      "cost_usd": 0.213653,
+      "tokens": 165633,
+      "sessions": 1
+    },
+    {
+      "date": "2026-05-29",
+      "cost_usd": 33.791879,
+      "tokens": 57078756,
+      "sessions": 3
+    },
+    {
+      "date": "2026-05-31",
+      "cost_usd": 29.14622,
+      "tokens": 43763859,
+      "sessions": 4
+    },
+    {
+      "date": "2026-06-05",
+      "cost_usd": 171.441542,
+      "tokens": 288582161,
+      "sessions": 6
+    },
+    {
+      "date": "2026-06-07",
+      "cost_usd": 6.934522,
+      "tokens": 14462879,
+      "sessions": 1
+    },
+    {
+      "date": "2026-06-08",
+      "cost_usd": 8.604445,
+      "tokens": 17059578,
+      "sessions": 1
+    },
+    {
+      "date": "2026-06-10",
+      "cost_usd": 35.566478,
+      "tokens": 57997946,
+      "sessions": 2
+    },
+    {
+      "date": "2026-06-12",
+      "cost_usd": 4.335399,
+      "tokens": 161374999,
+      "sessions": 3
+    },
+    {
+      "date": "2026-06-13",
+      "cost_usd": 155.738182,
+      "tokens": 120843495,
+      "sessions": 7
+    },
+    {
+      "date": "2026-06-16",
+      "cost_usd": 245.397831,
+      "tokens": 94711477,
+      "sessions": 3
+    },
+    {
+      "date": "2026-06-21",
+      "cost_usd": 16.262517,
+      "tokens": 883796,
+      "sessions": 1
+    },
+    {
+      "date": "2026-06-26",
+      "cost_usd": 52.917027,
+      "tokens": 18012917,
+      "sessions": 3
+    },
+    {
+      "date": "2026-06-30",
+      "cost_usd": 43.186083,
+      "tokens": 38113574,
+      "sessions": 2
+    },
+    {
+      "date": "2026-07-05",
+      "cost_usd": 0.0,
+      "tokens": 0,
+      "sessions": 28
+    },
+    {
+      "date": "2026-07-07",
+      "cost_usd": 0.0,
+      "tokens": 915074,
+      "sessions": 1
+    },
+    {
+      "date": "2026-07-15",
+      "cost_usd": 5.214913,
+      "tokens": 3580643,
+      "sessions": 1
+    },
+    {
+      "date": "2026-07-16",
+      "cost_usd": 67.282082,
+      "tokens": 16452217,
+      "sessions": 4
+    },
+    {
+      "date": "2026-07-18",
+      "cost_usd": 32.999777,
+      "tokens": 12729154,
+      "sessions": 2
+    },
+    {
+      "date": "2026-07-19",
+      "cost_usd": 90.517452,
+      "tokens": 44733913,
+      "sessions": 3
+    },
+    {
+      "date": "2026-07-20",
+      "cost_usd": 282.818017,
+      "tokens": 136892950,
+      "sessions": 1
+    },
+    {
+      "date": "2026-07-21",
+      "cost_usd": 0.0,
+      "tokens": 0,
+      "sessions": 1
+    },
+    {
+      "date": "2026-07-22",
+      "cost_usd": 2.590073,
+      "tokens": 5583890,
+      "sessions": 1
+    },
+    {
+      "date": "2026-07-23",
+      "cost_usd": 5.327094,
+      "tokens": 10380642,
+      "sessions": 1
+    },
+    {
+      "date": "2026-07-24",
+      "cost_usd": 850.977102,
+      "tokens": 519530337,
+      "sessions": 10
+    },
+    {
+      "date": "2026-07-25",
+      "cost_usd": 61.283598,
+      "tokens": 172458235,
+      "sessions": 11
+    },
+    {
+      "date": "2026-07-31",
+      "cost_usd": 0.0,
+      "tokens": 1912269,
+      "sessions": 1
+    },
+    {
+      "date": "2026-08-02",
+      "cost_usd": 0.17908,
+      "tokens": 212719,
+      "sessions": 1
+    },
+    {
+      "date": "2026-08-09",
+      "cost_usd": 8.312745,
+      "tokens": 11669216,
+      "sessions": 2
+    },
+    {
+      "date": "2026-08-10",
+      "cost_usd": 19.854776,
+      "tokens": 45655228,
+      "sessions": 2
+    },
+    {
+      "date": "2026-08-11",
+      "cost_usd": 0.698684,
+      "tokens": 884402,
+      "sessions": 1
+    },
+    {
+      "date": "2026-08-14",
+      "cost_usd": 3.138854,
+      "tokens": 4298331,
+      "sessions": 2
+    },
+    {
+      "date": "2026-08-15",
+      "cost_usd": 0.0,
+      "tokens": 0,
+      "sessions": 1
+    }
+  ],
+  "tool_mix": [
+    {
+      "tool": "bash",
+      "calls": 3370,
+      "output_bytes": 3878478
+    },
+    {
+      "tool": "edit",
+      "calls": 1742,
+      "output_bytes": 361623
+    },
+    {
+      "tool": "read",
+      "calls": 1695,
+      "output_bytes": 10403281
+    },
+    {
+      "tool": "other",
+      "calls": 516,
+      "output_bytes": 5614891
+    },
+    {
+      "tool": "test",
+      "calls": 154,
+      "output_bytes": 0
+    },
+    {
+      "tool": "search",
+      "calls": 154,
+      "output_bytes": 250569
+    },
+    {
+      "tool": "git",
+      "calls": 119,
+      "output_bytes": 0
+    },
+    {
+      "tool": "web",
+      "calls": 69,
+      "output_bytes": 84377
+    },
+    {
+      "tool": "task",
+      "calls": 65,
+      "output_bytes": 278152
+    }
+  ],
+  "findings": [
+    {
+      "detector": "target_churn",
+      "title": "Repeatedly rewriting the same file without it working",
+      "prescription": "Ask for a diagnosis before another edit: what does the model believe is wrong, and what evidence supports it?",
+      "mechanism": "Repeated rewrites of one file alongside repeated failures means each attempt is a guess. The conversation grows with every round, so the last guess costs several times what the first did.",
+      "severity": "high",
+      "wasted_usd": 8666.0914,
+      "wasted_tokens": 0,
+      "occurrences": 223,
+      "evidence": [
+        {
+          "session_id": "1611d5e9-9158-4d1d-8618-b539e1754db5",
+          "ts": "2026-04-13T09:58:12.909Z",
+          "quote": "video_tracking_screen.dart",
+          "detail": "Rewritten 160\u00d7 with 111 failure(s) in the same session \u2014 the fix isn't landing.",
+          "cost_usd": 1795.136587,
+          "tokens": 0,
+          "full_text": null,
+          "kind": "metric",
+          "target_path": ".../video_tracking_screen.dart"
+        },
+        {
+          "session_id": "1611d5e9-9158-4d1d-8618-b539e1754db5",
+          "ts": "2026-06-12T18:48:51.242Z",
+          "quote": "onnx_runtime.py",
+          "detail": "Rewritten 8\u00d7 with 111 failure(s) in the same session \u2014 the fix isn't landing.",
+          "cost_usd": 1254.692925,
+          "tokens": 0,
+          "full_text": null,
+          "kind": "metric",
+          "target_path": ".../onnx_runtime.py"
+        },
+        {
+          "session_id": "1611d5e9-9158-4d1d-8618-b539e1754db5",
+          "ts": "2026-05-11T07:04:31.549Z",
+          "quote": "main_navigation_screen.dart",
+          "detail": "Rewritten 5\u00d7 with 111 failure(s) in the same session \u2014 the fix isn't landing.",
+          "cost_usd": 1164.057827,
+          "tokens": 0,
+          "full_text": null,
+          "kind": "metric",
+          "target_path": ".../main_navigation_screen.dart"
+        },
+        {
+          "session_id": "1611d5e9-9158-4d1d-8618-b539e1754db5",
+          "ts": "2026-06-12T18:50:03.379Z",
+          "quote": "routes_video.py",
+          "detail": "Rewritten 4\u00d7 with 111 failure(s) in the same session \u2014 the fix isn't landing.",
+          "cost_usd": 718.167446,
+          "tokens": 0,
+          "full_text": null,
+          "kind": "metric",
+          "target_path": ".../routes_video.py"
+        },
+        {
+          "session_id": "1611d5e9-9158-4d1d-8618-b539e1754db5",
+          "ts": "2026-07-20T09:46:27.187Z",
+          "quote": "coaching_history_entry.dart",
+          "detail": "Rewritten 5\u00d7 with 111 failure(s) in the same session \u2014 the fix isn't landing.",
+          "cost_usd": 631.382661,
+          "tokens": 0,
+          "full_text": null,
+          "kind": "metric",
+          "target_path": ".../coaching_history_entry.dart"
+        }
+      ],
+      "escalation": [
+        {
+          "threshold": 2,
+          "action": "better_prompt",
+          "advice": "Paste the exact error, the command that produced it, and what you expected instead. The model is guessing because it hasn't been shown the failure."
+        },
+        {
+          "threshold": 3,
+          "action": "plan_mode",
+          "advice": "Stop patching and ask for a plan before any further edits. After three attempts the model is fixing symptoms it hasn't diagnosed \u2014 more attempts cost more and converge no faster."
+        },
+        {
+          "threshold": 5,
+          "action": "skill",
+          "advice": "This is a knowledge gap, not a prompting gap. Write the resolution down as a skill or a guideline (`agentlens skills`) so the next session starts where this one ended instead of rediscovering it."
+        }
+      ],
+      "blames_model": true,
+      "attempts": [
+        {
+          "when": "2026-04-13T05:27:53.305Z",
+          "prompt_excerpt": "Ok the video is playing but still skipping a lot of frames, I assume in complete local video analyser we dont need to skip frames at all and also the video see\u2026",
+          "tokens": 8211647,
+          "cost_usd": 6.961315,
+          "calls": 66
+        },
+        {
+          "when": "2026-04-13T05:28:30.663Z",
+          "prompt_excerpt": "Ok the video is playing but still skipping a lot of frames, I assume in complete local video analyser we dont need to skip frames at all and also the video see\u2026",
+          "tokens": 662009,
+          "cost_usd": 0.441836,
+          "calls": 6
+        },
+        {
+          "when": "2026-04-13T05:28:44.584Z",
+          "prompt_excerpt": "Ok the video is playing but still skipping a lot of frames, I assume in complete local video analyser we dont need to skip frames at all and also the video see\u2026",
+          "tokens": 610042,
+          "cost_usd": 0.405552,
+          "calls": 4
+        },
+        {
+          "when": "2026-04-13T05:28:51.032Z",
+          "prompt_excerpt": "Ok the video is playing but still skipping a lot of frames, I assume in complete local video analyser we dont need to skip frames at all and also the video see\u2026",
+          "tokens": 196939,
+          "cost_usd": 0.210681,
+          "calls": 2
+        },
+        {
+          "when": "2026-04-13T05:28:56.723Z",
+          "prompt_excerpt": "Ok the video is playing but still skipping a lot of frames, I assume in complete local video analyser we dont need to skip frames at all and also the video see\u2026",
+          "tokens": 688902,
+          "cost_usd": 0.41201,
+          "calls": 4
+        },
+        {
+          "when": "2026-04-13T09:58:20.292Z",
+          "prompt_excerpt": "You are working on the PostureSense Flutter + ONNX Runtime pipeline. OBJECTIVE: Immediately stabilize detection quality by integrating pretrained models for: -\u2026",
+          "tokens": 7688644,
+          "cost_usd": 4.318418,
+          "calls": 39
+        },
+        {
+          "when": "2026-04-13T09:58:33.320Z",
+          "prompt_excerpt": "You are working on the PostureSense Flutter + ONNX Runtime pipeline. OBJECTIVE: Immediately stabilize detection quality by integrating pretrained models for: -\u2026",
+          "tokens": 429560,
+          "cost_usd": 0.140498,
+          "calls": 3
+        },
+        {
+          "when": "2026-04-13T09:58:52.988Z",
+          "prompt_excerpt": "You are working on the PostureSense Flutter + ONNX Runtime pipeline. OBJECTIVE: Immediately stabilize detection quality by integrating pretrained models for: -\u2026",
+          "tokens": 721174,
+          "cost_usd": 0.23289,
+          "calls": 4
+        },
+        {
+          "when": "2026-04-20T16:09:31.221Z",
+          "prompt_excerpt": "yes go ahead and implement using sonnet",
+          "tokens": 32293757,
+          "cost_usd": 59.024927,
+          "calls": 186
+        },
+        {
+          "when": "2026-04-20T16:09:37.710Z",
+          "prompt_excerpt": "yes go ahead and implement using sonnet",
+          "tokens": 140784,
+          "cost_usd": 0.062274,
+          "calls": 1
+        },
+        {
+          "when": "2026-04-20T16:09:50.766Z",
+          "prompt_excerpt": "yes go ahead and implement using sonnet",
+          "tokens": 142748,
+          "cost_usd": 0.072734,
+          "calls": 1
+        },
+        {
+          "when": "2026-04-20T16:10:02.080Z",
+          "prompt_excerpt": "yes go ahead and implement using sonnet",
+          "tokens": 144618,
+          "cost_usd": 0.075584,
+          "calls": 1
+        },
+        {
+          "when": "2026-04-20T16:10:16.619Z",
+          "prompt_excerpt": "yes go ahead and implement using sonnet",
+          "tokens": 146896,
+          "cost_usd": 0.082072,
+          "calls": 1
+        },
+        {
+          "when": "2026-04-20T16:10:27.308Z",
+          "prompt_excerpt": "yes go ahead and implement using sonnet",
+          "tokens": 148752,
+          "cost_usd": 0.077833,
+          "calls": 1
+        },
+        {
+          "when": "2026-04-20T16:10:36.002Z",
+          "prompt_excerpt": "yes go ahead and implement using sonnet",
+          "tokens": 150524,
+          "cost_usd": 0.073334,
+          "calls": 1
+        },
+        {
+          "when": "2026-04-20T16:11:03.533Z",
+          "prompt_excerpt": "yes go ahead and implement using sonnet",
+          "tokens": 536069,
+          "cost_usd": 0.214371,
+          "calls": 4
+        },
+        {
+          "when": "2026-04-20T16:11:09.737Z",
+          "prompt_excerpt": "yes go ahead and implement using sonnet",
+          "tokens": 155678,
+          "cost_usd": 0.053651,
+          "calls": 2
+        },
+        {
+          "when": "2026-04-20T16:11:18.729Z",
+          "prompt_excerpt": "yes go ahead and implement using sonnet",
+          "tokens": 235750,
+          "cost_usd": 0.080675,
+          "calls": 3
+        },
+        {
+          "when": "2026-04-20T16:11:21.819Z",
+          "prompt_excerpt": "yes go ahead and implement using sonnet",
+          "tokens": 79134,
+          "cost_usd": 0.026953,
+          "calls": 1
+        },
+        {
+          "when": "2026-04-20T16:11:29.491Z",
+          "prompt_excerpt": "yes go ahead and implement using sonnet",
+          "tokens": 239906,
+          "cost_usd": 0.08796,
+          "calls": 2
+        }
+      ],
+      "advice": "This is a knowledge gap, not a prompting gap. Write the resolution down as a skill or a guideline (`agentlens skills`) so the next session starts where this one ended instead of rediscovering it."
+    },
+    {
+      "detector": "loop",
+      "title": "The model looping on the same failure",
+      "prescription": "Stop re-prompting. Give it the exact error and expected output, or switch to planning before further edits.",
+      "mechanism": "The same error recurred without the model converging on a fix. Each attempt re-sends the whole conversation, so the cost compounds while the failure stays identical \u2014 this is the model not making progress, not a badly worded prompt.",
+      "severity": "high",
+      "wasted_usd": 3075.6356,
+      "wasted_tokens": 3058553741,
+      "occurrences": 44,
+      "evidence": [
+        {
+          "session_id": "1611d5e9-9158-4d1d-8618-b539e1754db5",
+          "ts": "2026-06-10T16:26:00.858Z",
+          "quote": "The user doesn't want to proceed with this tool use. The tool use was rejected (eg. if it was a file edit, the new_string was NOT written to the file). STOP wh\u2026",
+          "detail": "Same failure 3\u00d7 in this session. Never resolved in this session.",
+          "cost_usd": 1001.00055,
+          "tokens": 1188943558,
+          "full_text": "The user doesn't want to proceed with this tool use. The tool use was rejected (eg. if it was a file edit, the new_string was NOT written to the file). STOP what you are doing and wait for the user to tell you how to proceed.",
+          "kind": "error",
+          "target_path": null
+        },
+        {
+          "session_id": "1611d5e9-9158-4d1d-8618-b539e1754db5",
+          "ts": "2026-05-10T07:54:00.870Z",
+          "quote": "Exit code 1 adb: device '74a240b5' not found",
+          "detail": "Same failure 9\u00d7 in this session. Resolved eventually, but only after 9 rounds.",
+          "cost_usd": 272.259382,
+          "tokens": 288893101,
+          "full_text": "Exit code 1\nadb: device '74a240b5' not found",
+          "kind": "error",
+          "target_path": null
+        },
+        {
+          "session_id": "4d168922-a047-4c0a-b23b-e1ab345ee9af",
+          "ts": "2026-04-15T06:49:50.214Z",
+          "quote": "<tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>",
+          "detail": "Same failure 14\u00d7 in this session on exercise_feedback.py. Resolved eventually, but only after 14 rounds.",
+          "cost_usd": 261.369961,
+          "tokens": 811231152,
+          "full_text": "<tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>",
+          "kind": "error",
+          "target_path": ".../exercise_feedback.py"
+        },
+        {
+          "session_id": "9ecde344-a919-464e-bcb6-24a37fad2541",
+          "ts": "2026-05-02T05:34:38.002Z",
+          "quote": "Exit code 1",
+          "detail": "Same failure 6\u00d7 in this session. Never resolved in this session.",
+          "cost_usd": 231.674806,
+          "tokens": 285395242,
+          "full_text": "Exit code 1",
+          "kind": "error",
+          "target_path": null
+        },
+        {
+          "session_id": "4d168922-a047-4c0a-b23b-e1ab345ee9af",
+          "ts": "2026-04-16T12:24:41.913Z",
+          "quote": "Exit code 1",
+          "detail": "Same failure 9\u00d7 in this session. Resolved eventually, but only after 9 rounds.",
+          "cost_usd": 214.802474,
+          "tokens": 1207136965,
+          "full_text": "Exit code 1",
+          "kind": "error",
+          "target_path": null
+        }
+      ],
+      "escalation": [
+        {
+          "threshold": 2,
+          "action": "better_prompt",
+          "advice": "Paste the exact error, the command that produced it, and what you expected instead. The model is guessing because it hasn't been shown the failure."
+        },
+        {
+          "threshold": 3,
+          "action": "plan_mode",
+          "advice": "Stop patching and ask for a plan before any further edits. After three attempts the model is fixing symptoms it hasn't diagnosed \u2014 more attempts cost more and converge no faster."
+        },
+        {
+          "threshold": 5,
+          "action": "skill",
+          "advice": "This is a knowledge gap, not a prompting gap. Write the resolution down as a skill or a guideline (`agentlens skills`) so the next session starts where this one ended instead of rediscovering it."
+        }
+      ],
+      "blames_model": true,
+      "attempts": [
+        {
+          "when": "2026-04-13T07:08:33.490Z",
+          "prompt_excerpt": "This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation. Summary\u2026",
+          "tokens": 104791489,
+          "cost_usd": 100.808913,
+          "calls": 861
+        },
+        {
+          "when": "2026-04-13T07:08:34.682Z",
+          "prompt_excerpt": "This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation. Summary\u2026",
+          "tokens": 452055,
+          "cost_usd": 0.116581,
+          "calls": 2
+        },
+        {
+          "when": "2026-04-13T07:08:36.414Z",
+          "prompt_excerpt": "This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation. Summary\u2026",
+          "tokens": 294560,
+          "cost_usd": 0.098365,
+          "calls": 3
+        },
+        {
+          "when": "2026-04-13T07:08:37.935Z",
+          "prompt_excerpt": "This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation. Summary\u2026",
+          "tokens": 406948,
+          "cost_usd": 0.17281,
+          "calls": 3
+        },
+        {
+          "when": "2026-04-13T07:08:47.204Z",
+          "prompt_excerpt": "This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation. Summary\u2026",
+          "tokens": 1285064,
+          "cost_usd": 1.120041,
+          "calls": 6
+        },
+        {
+          "when": "2026-04-13T07:08:49.091Z",
+          "prompt_excerpt": "This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation. Summary\u2026",
+          "tokens": 475536,
+          "cost_usd": 0.343051,
+          "calls": 2
+        },
+        {
+          "when": "2026-04-13T07:08:49.688Z",
+          "prompt_excerpt": "This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation. Summary\u2026",
+          "tokens": 313450,
+          "cost_usd": 0.326969,
+          "calls": 3
+        },
+        {
+          "when": "2026-04-13T07:08:51.218Z",
+          "prompt_excerpt": "This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation. Summary\u2026",
+          "tokens": 478382,
+          "cost_usd": 0.395598,
+          "calls": 3
+        },
+        {
+          "when": "2026-04-14T17:46:36.747Z",
+          "prompt_excerpt": "continue on last",
+          "tokens": 31343720,
+          "cost_usd": 33.397213,
+          "calls": 168
+        },
+        {
+          "when": "2026-04-14T17:46:37.533Z",
+          "prompt_excerpt": "continue on last",
+          "tokens": 29224,
+          "cost_usd": 0.010376,
+          "calls": 1
+        },
+        {
+          "when": "2026-04-14T17:46:37.980Z",
+          "prompt_excerpt": "continue on last",
+          "tokens": 29601,
+          "cost_usd": 0.016031,
+          "calls": 1
+        },
+        {
+          "when": "2026-04-14T17:46:42.170Z",
+          "prompt_excerpt": "continue on last",
+          "tokens": 60112,
+          "cost_usd": 0.024546,
+          "calls": 1
+        },
+        {
+          "when": "2026-04-14T17:46:43.368Z",
+          "prompt_excerpt": "continue on last",
+          "tokens": 60582,
+          "cost_usd": 0.031596,
+          "calls": 2
+        },
+        {
+          "when": "2026-04-14T17:46:43.500Z",
+          "prompt_excerpt": "continue on last",
+          "tokens": 0,
+          "cost_usd": 0.0,
+          "calls": 0
+        },
+        {
+          "when": "2026-04-15T08:10:44.325Z",
+          "prompt_excerpt": "continue on last failed one",
+          "tokens": 12308495,
+          "cost_usd": 7.889227,
+          "calls": 95
+        },
+        {
+          "when": "2026-04-15T08:10:47.908Z",
+          "prompt_excerpt": "continue on last failed one",
+          "tokens": 38832,
+          "cost_usd": 0.014641,
+          "calls": 1
+        },
+        {
+          "when": "2026-04-15T08:48:00.610Z",
+          "prompt_excerpt": "continue on last failed one",
+          "tokens": 1113134,
+          "cost_usd": 0.493754,
+          "calls": 20
+        },
+        {
+          "when": "2026-04-15T10:04:02.844Z",
+          "prompt_excerpt": "This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation. Summary\u2026",
+          "tokens": 5192825,
+          "cost_usd": 12.558415,
+          "calls": 128
+        },
+        {
+          "when": "2026-04-15T10:06:39.760Z",
+          "prompt_excerpt": "Fix PosturePilot report rendering, report-generation consistency bugs, and add visual analysis overlays as a premium feature. Observed bugs: 1. The same summar\u2026",
+          "tokens": 24950258,
+          "cost_usd": 10.395023,
+          "calls": 146
+        },
+        {
+          "when": "2026-04-19T17:34:03.907Z",
+          "prompt_excerpt": "read the last response from you and implement the plan",
+          "tokens": 64918707,
+          "cost_usd": 67.906857,
+          "calls": 454
+        }
+      ],
+      "advice": "This is a knowledge gap, not a prompting gap. Write the resolution down as a skill or a guideline (`agentlens skills`) so the next session starts where this one ended instead of rediscovering it."
+    },
+    {
+      "detector": "output_flood",
+      "title": "Huge command output flooding the context window",
+      "prescription": "Pipe it: `| head -40`, `--quiet`, `-q`, or `2>&1 | tail -20`. Ask for the specific lines you need, not the whole dump.",
+      "mechanism": "Command output lands in the context window verbatim and is re-sent as input tokens on every later turn of the session, so one unpiped command is billed dozens of times.",
+      "severity": "high",
+      "wasted_usd": 1861.2448,
+      "wasted_tokens": 2200528639,
+      "occurrences": 92,
+      "evidence": [
+        {
+          "session_id": "1611d5e9-9158-4d1d-8618-b539e1754db5",
+          "ts": "2026-04-26T13:54:44.072Z",
+          "quote": "~/Documents/projects/posturesense/lib/src/tracking/screens/match_analysis_screen.dart",
+          "detail": "82 KB of output (~21,247 tokens) re-sent as input on 5221 later turn(s).",
+          "cost_usd": 107.25913,
+          "tokens": 110930587,
+          "full_text": null,
+          "kind": "metric",
+          "target_path": null
+        },
+        {
+          "session_id": "1611d5e9-9158-4d1d-8618-b539e1754db5",
+          "ts": "2026-04-21T06:46:28.497Z",
+          "quote": "~/Documents/projects/posturesense/lib/src/tracking/screens/match_analysis_screen.dart",
+          "detail": "72 KB of output (~18,636 tokens) re-sent as input on 5233 later turn(s).",
+          "cost_usd": 94.294507,
+          "tokens": 97522188,
+          "full_text": null,
+          "kind": "metric",
+          "target_path": null
+        },
+        {
+          "session_id": "1611d5e9-9158-4d1d-8618-b539e1754db5",
+          "ts": "2026-04-21T08:13:24.803Z",
+          "quote": "tree -L 3 ~/Documents/projects/posturesense/lib/src/coaching/ 2>/dev/null || find ~/Documents/projects/posturesense/lib/s\u2026",
+          "detail": "61 KB of output (~15,640 tokens) re-sent as input on 5224 later turn(s).",
+          "cost_usd": 78.999233,
+          "tokens": 81703360,
+          "full_text": null,
+          "kind": "metric",
+          "target_path": null
+        },
+        {
+          "session_id": "1611d5e9-9158-4d1d-8618-b539e1754db5",
+          "ts": "2026-06-12T10:05:57.765Z",
+          "quote": "/tmp/det_3500.jpg",
+          "detail": "193 KB of output (~49,533 tokens) re-sent as input on 1632 later turn(s).",
+          "cost_usd": 78.162375,
+          "tokens": 80837856,
+          "full_text": null,
+          "kind": "metric",
+          "target_path": null
+        },
+        {
+          "session_id": "1611d5e9-9158-4d1d-8618-b539e1754db5",
+          "ts": "2026-04-21T09:27:32.856Z",
+          "quote": "~/Documents/projects/posturesense/lib/src/tracking/screens/match_analysis_screen.dart",
+          "detail": "73 KB of output (~18,930 tokens) re-sent as input on 4085 later turn(s).",
+          "cost_usd": 74.769699,
+          "tokens": 77329050,
+          "full_text": null,
+          "kind": "metric",
+          "target_path": null
+        }
+      ],
+      "escalation": [],
+      "blames_model": false,
+      "attempts": [],
+      "advice": "Pipe it: `| head -40`, `--quiet`, `-q`, or `2>&1 | tail -20`. Ask for the specific lines you need, not the whole dump."
+    },
+    {
+      "detector": "compaction_thrash",
+      "title": "Sessions running until the context window fills",
+      "prescription": "Start a fresh session when the topic changes. Carry forward three lines of state, not the whole transcript.",
+      "mechanism": "Compaction summarises history to survive, then re-sends that summary on every later turn \u2014 you pay for it forever and lose detail you can't get back.",
+      "severity": "high",
+      "wasted_usd": 979.2406,
+      "wasted_tokens": 0,
+      "occurrences": 97,
+      "evidence": [
+        {
+          "session_id": "1611d5e9-9158-4d1d-8618-b539e1754db5",
+          "ts": "2026-04-14T18:50:21.182Z",
+          "quote": "22 compaction(s); peak context fill 100%.",
+          "detail": "Session spend $1844.42.",
+          "cost_usd": 553.326412,
+          "tokens": 0,
+          "full_text": null,
+          "kind": "metric",
+          "target_path": null
+        },
+        {
+          "session_id": "4d168922-a047-4c0a-b23b-e1ab345ee9af",
+          "ts": "2026-04-15T16:55:45.085Z",
+          "quote": "16 compaction(s); peak context fill 100%.",
+          "detail": "Session spend $398.07.",
+          "cost_usd": 119.421727,
+          "tokens": 0,
+          "full_text": null,
+          "kind": "metric",
+          "target_path": null
+        },
+        {
+          "session_id": "9ecde344-a919-464e-bcb6-24a37fad2541",
+          "ts": "2026-04-30T05:26:52.897Z",
+          "quote": "11 compaction(s); peak context fill 100%.",
+          "detail": "Session spend $285.13.",
+          "cost_usd": 85.539415,
+          "tokens": 0,
+          "full_text": null,
+          "kind": "metric",
+          "target_path": null
+        },
+        {
+          "session_id": "rollout-2026-05-02T13-52-32-019de7c8-3b25-72a2-a7de-03cb10f4a78f",
+          "ts": "2026-05-04T05:10:17.591Z",
+          "quote": "6 compaction(s); peak context fill 100%.",
+          "detail": "Session spend $221.57.",
+          "cost_usd": 66.46987,
+          "tokens": 0,
+          "full_text": null,
+          "kind": "metric",
+          "target_path": null
+        },
+        {
+          "session_id": "rollout-2026-05-02T13-52-30-019de7c8-31b1-7761-b781-ba5338154831",
+          "ts": "2026-05-02T15:31:05.110Z",
+          "quote": "9 compaction(s); peak context fill 100%.",
+          "detail": "Session spend $216.13.",
+          "cost_usd": 64.839077,
+          "tokens": 0,
+          "full_text": null,
+          "kind": "metric",
+          "target_path": null
+        }
+      ],
+      "escalation": [],
+      "blames_model": false,
+      "attempts": [],
+      "advice": "Start a fresh session when the topic changes. Carry forward three lines of state, not the whole transcript."
+    },
+    {
+      "detector": "cross_session_loop",
+      "title": "The same failure keeps coming back across sessions",
+      "prescription": "Write the resolution into the project \u2014 a skill, or a rule in CLAUDE.md / AGENTS.md / .junie/guidelines.md. Run `agentlens skills` for a generated starting point.",
+      "mechanism": "You solved this before and paid to solve it again. Nothing in the project tells the agent what the answer was, so every new session rediscovers it from scratch.",
+      "severity": "high",
+      "wasted_usd": 698.2774,
+      "wasted_tokens": 0,
+      "occurrences": 4,
+      "evidence": [
+        {
+          "session_id": "1611d5e9-9158-4d1d-8618-b539e1754db5",
+          "ts": "2026-04-30T12:27:26.840Z",
+          "quote": "<tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>",
+          "detail": "Hit in 4 separate sessions \u2014 the fix from last time didn't carry forward, so you paid roughly $698.28 to rediscover it.",
+          "cost_usd": 698.27744,
+          "tokens": 0,
+          "full_text": "<tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>",
+          "kind": "error",
+          "target_path": ".../slot_recovery.dart"
+        },
+        {
+          "session_id": "1611d5e9-9158-4d1d-8618-b539e1754db5",
+          "ts": "2026-04-14T18:41:22.472Z",
+          "quote": "Exit code 1",
+          "detail": "Hit in 3 separate sessions \u2014 the fix from last time didn't carry forward, already counted above via an overlapping session.",
+          "cost_usd": 0,
+          "tokens": 0,
+          "full_text": "Exit code 1",
+          "kind": "error",
+          "target_path": null
+        },
+        {
+          "session_id": "1611d5e9-9158-4d1d-8618-b539e1754db5",
+          "ts": "2026-04-13T09:58:20.293Z",
+          "quote": "<tool_use_error>File has been modified since read, either by the user or by a linter. Read it again before attempting to write it.</tool_use_error>",
+          "detail": "Hit in 3 separate sessions \u2014 the fix from last time didn't carry forward, already counted above via an overlapping session.",
+          "cost_usd": 0,
+          "tokens": 0,
+          "full_text": "<tool_use_error>File has been modified since read, either by the user or by a linter. Read it again before attempting to write it.</tool_use_error>",
+          "kind": "error",
+          "target_path": ".../match_analysis_screen.dart"
+        },
+        {
+          "session_id": "1611d5e9-9158-4d1d-8618-b539e1754db5",
+          "ts": "2026-04-19T17:02:55.507Z",
+          "quote": "File does not exist. Note: your current working directory is ~/Documents/projects/posturesense.",
+          "detail": "Hit in 3 separate sessions \u2014 the fix from last time didn't carry forward, already counted above via an overlapping session.",
+          "cost_usd": 0,
+          "tokens": 0,
+          "full_text": "File does not exist. Note: your current working directory is ~/Documents/projects/posturesense.",
+          "kind": "error",
+          "target_path": ".../ort_session_options.dart"
+        },
+        {
+          "session_id": "1611d5e9-9158-4d1d-8618-b539e1754db5",
+          "ts": "2026-04-26T12:45:05.346Z",
+          "quote": "Exit code 1 Traceback (most recent call last): File \"<stdin>\", line 2, in <module> File \"~/Documents/projects/posturesense/reid_osnet_env/li\u2026",
+          "detail": "Hit in 3 separate sessions \u2014 the fix from last time didn't carry forward, already counted above via an overlapping session.",
+          "cost_usd": 0,
+          "tokens": 0,
+          "full_text": "Exit code 1\nTraceback (most recent call last):\n  File \"<stdin>\", line 2, in <module>\n  File \"~/Documents/projects/posturesense/reid_osnet_env/lib/python3.11/site-packages/onnx/__init__.py\", line 231, in load_model\n    load_external_data_for_model(model, base_dir)\n  File \"~/Documents/projects/posturesense/reid_osnet_env/lib/python3.11/site-packages/onnx/external_data_helper.py\", line 218, in load_external_data_for_model\n    load_external_data_for_tensor(tensor, base_dir)\n  File \"~/Documents/projects/posturesense/reid_osnet_env/lib/python3",
+          "kind": "error",
+          "target_path": null
+        }
+      ],
+      "escalation": [
+        {
+          "threshold": 2,
+          "action": "skill",
+          "advice": "Capture this as a skill or guideline. It has already cost you more than once, and it will keep doing so until it's written down where the agent will read it."
+        }
+      ],
+      "blames_model": false,
+      "attempts": [
+        {
+          "when": "2026-04-15T06:49:50.214Z",
+          "prompt_excerpt": "<tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>",
+          "tokens": 0,
+          "cost_usd": 398.072425,
+          "calls": 1
+        },
+        {
+          "when": "2026-04-30T12:27:26.840Z",
+          "prompt_excerpt": "<tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>",
+          "tokens": 0,
+          "cost_usd": 1844.421372,
+          "calls": 1
+        },
+        {
+          "when": "2026-05-02T16:09:57.070Z",
+          "prompt_excerpt": "<tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>",
+          "tokens": 0,
+          "cost_usd": 285.131384,
+          "calls": 1
+        },
+        {
+          "when": "2026-06-30T06:43:53.201Z",
+          "prompt_excerpt": "<tool_use_error>File has not been read yet. Read it first before writing to it.</tool_use_error>",
+          "tokens": 0,
+          "cost_usd": 15.073632,
+          "calls": 1
+        }
+      ],
+      "advice": "Capture this as a skill or guideline. It has already cost you more than once, and it will keep doing so until it's written down where the agent will read it."
+    },
+    {
+      "detector": "model_mismatch",
+      "title": "Expensive model on mechanical work",
+      "prescription": "Route mechanical work \u2014 renames, formatting, boilerplate, single-file edits with a clear spec \u2014 to a cheap model. Keep the expensive one for design and debugging.",
+      "mechanism": "Frontier-model pricing buys reasoning depth. Mechanical edits don't use it, so you pay the premium for nothing.",
+      "severity": "high",
+      "wasted_usd": 568.7118,
+      "wasted_tokens": 0,
+      "occurrences": 49,
+      "evidence": [
+        {
+          "session_id": "1611d5e9-9158-4d1d-8618-b539e1754db5",
+          "ts": "2026-07-24T05:11:05.408Z",
+          "quote": "check code base for any changes required on ios. Then will run it there",
+          "detail": "Ran on claude-opus-4-8 ($75/1M out) for 1 edit(s) and no test or sub-task. claude-haiku-4-5 would have cost ~$3.862 instead of $57.934.",
+          "cost_usd": 54.071909,
+          "tokens": 0,
+          "full_text": "check code base for any changes required on ios. Then will run it there",
+          "kind": "prompt",
+          "target_path": null
+        },
+        {
+          "session_id": "1611d5e9-9158-4d1d-8618-b539e1754db5",
+          "ts": "2026-07-24T06:29:23.491Z",
+          "quote": "I have made the changes and run the app. monitor the logs on both android and ios and check for issues if any. Commit the code base as well",
+          "detail": "Ran on claude-opus-4-8 ($75/1M out) for 0 edit(s) and no test or sub-task. claude-haiku-4-5 would have cost ~$3.479 instead of $52.187.",
+          "cost_usd": 48.708066,
+          "tokens": 0,
+          "full_text": "I have made the changes and run the app. monitor the logs on both android and ios and check for issues if any. Commit the code base as well",
+          "kind": "prompt",
+          "target_path": null
+        },
+        {
+          "session_id": "1611d5e9-9158-4d1d-8618-b539e1754db5",
+          "ts": "2026-07-24T06:28:02.568Z",
+          "quote": "<task-notification> <task-id>b31f7vslq</task-id> <summary>Monitor event: \"Watch signed iOS build outcome\"</summary> <event>[Monitor timed out \u2014 re-arm if neede\u2026",
+          "detail": "Ran on claude-opus-4-8 ($75/1M out) for 0 edit(s) and no test or sub-task. claude-haiku-4-5 would have cost ~$3.019 instead of $45.280.",
+          "cost_usd": 42.261511,
+          "tokens": 0,
+          "full_text": "<task-notification>\n<task-id>b31f7vslq</task-id>\n<summary>Monitor event: \"Watch signed iOS build outcome\"</summary>\n<event>[Monitor timed out \u2014 re-arm if needed.]</event>\n</task-notification>",
+          "kind": "prompt",
+          "target_path": null
+        },
+        {
+          "session_id": "9ecde344-a919-464e-bcb6-24a37fad2541",
+          "ts": "2026-06-16T04:15:24.950Z",
+          "quote": "is the backend and web already pushed? then push the aab file as well to internal testing will take udpate and check",
+          "detail": "Ran on claude-opus-4-8 ($75/1M out) for 3 edit(s) and no test or sub-task. claude-haiku-4-5 would have cost ~$2.010 instead of $30.147.",
+          "cost_usd": 28.13711,
+          "tokens": 0,
+          "full_text": "is the backend and web already pushed? then push the aab file as well to internal testing will take udpate and check",
+          "kind": "prompt",
+          "target_path": null
+        },
+        {
+          "session_id": "1611d5e9-9158-4d1d-8618-b539e1754db5",
+          "ts": "2026-06-16T11:58:38.522Z",
+          "quote": "06-16 17:28:25.786 30840 30840 I flutter : VIDEO_FRAME_EXTRACTOR: init=true 06-16 17:28:25.866 30840 30840 I flutter : VIDEO_TRACKING: backend <REDACTED:url>",
+          "detail": "Ran on claude-opus-4-8 ($75/1M out) for 0 edit(s) and no test or sub-task. claude-haiku-4-5 would have cost ~$1.845 instead of $27.672.",
+          "cost_usd": 25.82704,
+          "tokens": 0,
+          "full_text": "06-16 17:28:25.786 30840 30840 I flutter : VIDEO_FRAME_EXTRACTOR: init=true\n06-16 17:28:25.866 30840 30840 I flutter : VIDEO_TRACKING: backend <REDACTED:url> available=false",
+          "kind": "prompt",
+          "target_path": null
+        }
+      ],
+      "escalation": [],
+      "blames_model": false,
+      "attempts": [],
+      "advice": "Route mechanical work \u2014 renames, formatting, boilerplate, single-file edits with a clear spec \u2014 to a cheap model. Keep the expensive one for design and debugging."
+    },
+    {
+      "detector": "edit_without_test",
+      "title": "Editing without running the tests",
+      "prescription": "Put the acceptance check in the prompt itself: \"\u2026and `pytest -q` must pass\". Make the agent verify in the same turn it edits.",
+      "mechanism": "An unverified edit that turns out wrong triggers a rework loop, and a rework loop re-sends the entire conversation. A test run is far cheaper than discovering the problem three turns later.",
+      "severity": "high",
+      "wasted_usd": 433.2226,
+      "wasted_tokens": 0,
+      "occurrences": 1099,
+      "evidence": [
+        {
+          "session_id": "1611d5e9-9158-4d1d-8618-b539e1754db5",
+          "ts": "2026-04-21T08:18:58.703Z",
+          "quote": "733 edit operations, 4 verification run(s)",
+          "detail": "Ratio 183:1. Estimated rework exposure $368.88 (20% of this session's $1844.42).",
+          "cost_usd": 368.884274,
+          "tokens": 0,
+          "full_text": null,
+          "kind": "metric",
+          "target_path": null
+        },
+        {
+          "session_id": "9ecde344-a919-464e-bcb6-24a37fad2541",
+          "ts": "2026-04-28T12:26:24.330Z",
+          "quote": "306 edit operations, 1 verification run(s)",
+          "detail": "Ratio 306:1. Estimated rework exposure $57.03 (20% of this session's $285.13).",
+          "cost_usd": 57.026277,
+          "tokens": 0,
+          "full_text": null,
+          "kind": "metric",
+          "target_path": null
+        },
+        {
+          "session_id": "dcb23a0c-5ab8-41cf-ad20-2eb1feb58f36",
+          "ts": "2026-07-15T13:42:37.203Z",
+          "quote": "14 edit operations, 0 verification run(s)",
+          "detail": "Ratio 14:1. Estimated rework exposure $4.30 (20% of this session's $21.49).",
+          "cost_usd": 4.297274,
+          "tokens": 0,
+          "full_text": null,
+          "kind": "metric",
+          "target_path": null
+        },
+        {
+          "session_id": "47ead0b6-f23f-4878-9685-d6e56a8ed80e",
+          "ts": "2026-06-30T06:43:53.198Z",
+          "quote": "46 edit operations, 0 verification run(s)",
+          "detail": "Ratio 46:1. Estimated rework exposure $3.01 (20% of this session's $15.07).",
+          "cost_usd": 3.014726,
+          "tokens": 0,
+          "full_text": null,
+          "kind": "metric",
+          "target_path": null
+        }
+      ],
+      "escalation": [],
+      "blames_model": false,
+      "attempts": [],
+      "advice": "Put the acceptance check in the prompt itself: \"\u2026and `pytest -q` must pass\". Make the agent verify in the same turn it edits."
+    },
+    {
+      "detector": "vague_instruction",
+      "title": "Vague prompts that make the agent go hunting",
+      "prescription": "Name the file, the expected behaviour, and the check that proves it: \"In @src/auth.py, make login() reject expired tokens; `pytest tests/test_auth.py` must pass.\"",
+      "mechanism": "With no file and no acceptance criterion the agent has to discover what you meant, and that discovery is billed to you at full rate.",
+      "severity": "high",
+      "wasted_usd": 74.9808,
+      "wasted_tokens": 124063840,
+      "occurrences": 34,
+      "evidence": [
+        {
+          "session_id": "4d168922-a047-4c0a-b23b-e1ab345ee9af",
+          "ts": "2026-04-16T04:20:15.614Z",
+          "quote": "Fix three PosturePilot issues without disturbing current working code. Issues: 1. Multi-pose / sequence-analysis reports still sometimes say \u201csquat\u201d in the tit\u2026",
+          "detail": "no file reference, no acceptance check \u2014 the agent ran 132 search/read calls before it could act.",
+          "cost_usd": 16.85055,
+          "tokens": 22881539,
+          "full_text": "Fix three PosturePilot issues without disturbing current working code.\n\nIssues:\n1. Multi-pose / sequence-analysis reports still sometimes say \u201csquat\u201d in the title or summary even when the video contains multiple yoga poses and no squat.\n2. From the report page, user cannot easily go back home or start another analysis.\n3. No images appear under visual analysis for sequence reports.\n\nRequirements:\n- Do NOT disturb the current single-exercise working code.\n- Preserve current pipeline.\n- Make only additive / targeted fixes.\n\nTasks:\n\n1. Fix sequence-analysis report title/summary\n- Inspect sequence summary generation and any report header/title builder.\n- Ensure sequence mode never uses single-exercise squat fallback text.\n- For multi-pose sessions, use sequence-aware title/summary such as:\n  - \u201cYoga Flow Analysis\u201d\n  - \u201c4-Pose Sequence Analysis\u201d\n  - \u201cDetected Flow: Downward Dog \u2192 Plank \u2192 Cobra \u2192 Child\u2019s Pose\u201d\n- If exact sequence is unknown, use neutral sequence text.\n- Add tests proving multi-pose reports never say squat unless a squat segment actually exists.\n\n2. Fix report page navigation UX\n- In Flutter results/report screen, add:\n  - Back to Home button\n  - Start Another Analysis button\n- Ensure these work for both single-exercise and sequence-analysis reports.\n- Clear stale report/session state when starting a new analysis.\n- Do not break current navigation stack.\n\n3. Fix visual analysis display for sequence mode\n- Inspect how visual overlay fields are returned in sequence-analysis responses.\n- If session-level overlay exists, show it in sequence mode as fallback.\n- If per-segment overlay is null, show a clear placeholder state instead of empty UI.\n- Best effort: add per-segment overlay generation by reusing existing overlay generator for each segment\u2019s representative frame.\n- Store segment overlay paths in segment report objects if implemented.\n- If full per-segment overlay is not feasible in this pass, still make the UI gracefully show session overlay + explanatory message.\n\n4. API / model consistency\n- Ensure sequence report payload clearly indicates:\n  - session overlay availability\n  - segment overlay availability\n  - overlay locked/unlocked state\n- Avoid null-driven blank UI.\n\n5. Tests\nAdd/update tests for:\n- sequence summary/title\n- no squat fallback in multi-pose mode\n- report navigation buttons render\n- sequence visual analysis fallback rendering\n\nAt the end print:\n- root cause of squat text in sequence mode\n- files changed\n- whether sequence mode now shows session overlay fallback\n- whether per-segment overlay was added or still pending\n- what navigation actions were added",
+          "kind": "prompt",
+          "target_path": null
+        },
+        {
+          "session_id": "4d168922-a047-4c0a-b23b-e1ab345ee9af",
+          "ts": "2026-04-16T16:51:03.977Z",
+          "quote": "Fix the remaining sequence-mode UI issues in PosturePilot without touching the working single-exercise flow. Observed facts: - Backend worker completes success\u2026",
+          "detail": "no file reference \u2014 the agent ran 22 search/read calls before it could act.",
+          "cost_usd": 6.784052,
+          "tokens": 5205863,
+          "full_text": "Fix the remaining sequence-mode UI issues in PosturePilot without touching the working single-exercise flow.\n\nObserved facts:\n- Backend worker completes successfully\n- /sessions/{id}/report returns 200\n- /sessions/{id}/overlay_gallery_0..2 return 200\n- Overlay gallery images are being served\n- But the report title still shows \"Squat\" for a multi-pose yoga video\n- Gallery semantics still look weak / possibly mismatched\n\nTasks:\n1. Fix multi-pose title in Flutter decisively\n- For isMultiPose == true, ignore all single-exercise fields:\n  - exerciseDisplayName\n  - exerciseSlug\n  - single-exercise summary/title fallbacks\n- Use only:\n  - sequenceSummary.sequenceTitle\n  - else \"Yoga Flow Analysis\"\n- Add a widget/API test proving multi-pose UI never shows \"Squat\" unless squat is actually present\n\n2. Improve overlay gallery semantics\n- Ensure each overlay gallery item includes and displays:\n  - pose_display_name\n  - segment_index\n  - timestamp\n  - score\n  - selection_reason\n- Verify gallery cards are not reusing single-exercise labels/fallbacks\n\n3. Debug using current logs/data flow\n- Trace actual title value and gallery item fields from:\n  API response \u2192 Flutter model parsing \u2192 result screen rendering\n- Print the exact root cause\n\n4. Keep code stable\n- Do not rewrite backend pipeline\n- Do not disturb single-exercise behavior\n\nAt the end print:\n- root cause of the persistent \"Squat\" title\n- files changed\n- exact field now used for sequence title\n- sample corrected sequence UI payload",
+          "kind": "prompt",
+          "target_path": null
+        },
+        {
+          "session_id": "1611d5e9-9158-4d1d-8618-b539e1754db5",
+          "ts": "2026-04-20T16:25:14.849Z",
+          "quote": "nothing worked, check the logs , what was getting detected also is not detected anymore, 0 players detected ,",
+          "detail": "no file reference, no acceptance check \u2014 the agent ran 6 search/read calls before it could act.",
+          "cost_usd": 6.151521,
+          "tokens": 1189358,
+          "full_text": "nothing worked, check the logs , what was getting detected also is not detected anymore, 0 players detected ,",
+          "kind": "prompt",
+          "target_path": null
+        },
+        {
+          "session_id": "4d168922-a047-4c0a-b23b-e1ab345ee9af",
+          "ts": "2026-04-16T04:03:36.857Z",
+          "quote": "Am getting this error on briwsing exercise categories",
+          "detail": "no file reference, no acceptance check \u2014 the agent ran 30 search/read calls before it could act.",
+          "cost_usd": 4.527033,
+          "tokens": 3753030,
+          "full_text": "Am getting this error on briwsing exercise categories",
+          "kind": "prompt",
+          "target_path": null
+        },
+        {
+          "session_id": "4d168922-a047-4c0a-b23b-e1ab345ee9af",
+          "ts": "2026-04-16T12:24:25.591Z",
+          "quote": "check any error in console as the report page is not loading LIMIT %(param_1)s 2026-04-16 17:52:31,398 INFO sqlalchemy.engine.Engine [cached since 16.4s ago] {\u2026",
+          "detail": "no acceptance check \u2014 the agent ran 17 search/read calls before it could act.",
+          "cost_usd": 4.520597,
+          "tokens": 8260587,
+          "full_text": "check any error in console as the report page is not loading \n\n\n LIMIT %(param_1)s\n2026-04-16 17:52:31,398 INFO sqlalchemy.engine.Engine [cached since 16.4s ago] {'id_1': '9c4ee7a3-24dd-4bd8-bec2-d7c5ff0237c7', 'param_1': 1}\n2026-04-16 17:52:31,404 INFO sqlalchemy.engine.Engine SELECT posture_reports.id AS posture_reports_id, posture_reports.session_id AS posture_reports_session_id, posture_reports.overall_score AS posture_reports_overall_score, posture_reports.summary_json AS posture_reports_summary_json, posture_reports.segments_json AS posture_reports_segments_json, posture_reports.premium_insights_json AS posture_reports_premium_insights_json, posture_reports.premium_report_json AS posture_reports_premium_report_json, posture_reports.exercise_display_name AS posture_reports_exercise_display_name, posture_reports.category_display AS posture_reports_category_display, posture_reports.exercise_slug AS posture_reports_exercise_slug, posture_reports.exercise_tips_json AS posture_reports_exercise_tips_json, posture_reports.metadata_json AS posture_reports_metadata_json, posture_reports.overlay_image_path AS posture_reports_overlay_image_path, posture_reports.overlay_metadata_json AS posture_reports_overlay_metadata_json, posture_reports.overlay_gallery_json AS posture_reports_overlay_gallery_json, posture_reports.is_multi_pose AS posture_reports_is_multi_pose, posture_reports.segment_reports_json AS posture_reports_segment_reports_json, posture_reports.sequence_summary_json AS posture_reports_sequence_summary_json, posture_reports.created_at AS posture_reports_created_at \nFROM posture_reports \nWHERE posture_reports.session_id = %(session_id_1)s \n LIMIT %(param_1)s\n2026-04-16 17:52:31,404 INFO sqlalchemy.engine.Engine [generated in 0.00036s] {'session_id_1': '9c4ee7a3-24dd-4bd8-bec2-d7c5ff0237c7', 'param_1': 1}\nINFO:     <REDACTED:ip>:51644 - \"GET /sessions/9c4ee7a3-24dd-4bd8-bec2-d7c5ff0237c7/report HTTP/1.1\" 200 OK\n2026-04-16 17:52:31,408 INFO sqlalchemy.engine.Engine ROLLBACK\nINFO:     <REDACTED:ip>:51661 - \"GET /tmp/posturepilot_uploads/9c4ee7a3-24dd-4bd8-bec2-d7c5ff0237c7/overlay_9c4ee7a3-24dd-4bd8-bec2-d7c5ff0237c7_gallery_1.jpg HTTP/1.1\" 404 Not Found\nINFO:     <REDACTED:ip>:51662 - \"GET /tmp/posturepilot_uploads/9c4ee7a3-24dd-4bd8-bec2-d7c5ff0237c7/overlay_9c4ee7a3-24dd-4bd8-bec2-d7c5ff0237c7_gallery_2.jpg HTTP/1.1\" 404 Not Found\nINFO:     <REDACTED:ip>:51663 - \"GET /tmp/posturepilot_uploads/9c4ee7a3-24dd-4bd8-bec2-d7c5ff0237c7/overlay_9c4ee7a3-24dd-4bd8-bec2-d7c5ff0237c7_gallery_0.jpg HTTP/1.1\" 404 Not Found\n\nSome error s whicj I saw",
+          "kind": "prompt",
+          "target_path": null
+        }
+      ],
+      "escalation": [],
+      "blames_model": false,
+      "attempts": [],
+      "advice": "Name the file, the expected behaviour, and the check that proves it: \"In @src/auth.py, make login() reject expired tokens; `pytest tests/test_auth.py` must pass.\""
+    },
+    {
+      "detector": "blind_retry",
+      "title": "Re-asking without new information",
+      "prescription": "Say what \"wrong\" means before you re-send: the exact command you ran, the output you observed, and the output you expected.",
+      "mechanism": "The whole conversation is re-sent as input on every turn, so a second attempt costs more than the first \u2014 and with no new evidence the model just repeats the same guess in different words.",
+      "severity": "high",
+      "wasted_usd": 10.9897,
+      "wasted_tokens": 5585549,
+      "occurrences": 4,
+      "evidence": [
+        {
+          "session_id": "1611d5e9-9158-4d1d-8618-b539e1754db5",
+          "ts": "2026-06-16T07:34:50.621Z",
+          "quote": "yes for firm the backend on 8001 is still alive before you re-run?",
+          "detail": "Reports failure without saying what failed (\"check curent new logs.\") \u2014 no error text, path or output was supplied.",
+          "cost_usd": 9.623038,
+          "tokens": 1944905,
+          "full_text": "yes for firm the backend on 8001 is still alive before you re-run?",
+          "kind": "prompt",
+          "target_path": null
+        },
+        {
+          "session_id": "4d168922-a047-4c0a-b23b-e1ab345ee9af",
+          "ts": "2026-05-11T08:22:58.202Z",
+          "quote": "last response errored out check and try again",
+          "detail": "Reports failure without saying what failed (\"Yes \u2014 implement fix #1 now. That is the right next move. Do\u2026\") \u2014 no error text, path or output was supplied.",
+          "cost_usd": 1.205326,
+          "tokens": 1650180,
+          "full_text": "last response errored out check and try again",
+          "kind": "prompt",
+          "target_path": null
+        },
+        {
+          "session_id": "4d168922-a047-4c0a-b23b-e1ab345ee9af",
+          "ts": "2026-06-08T03:55:04.248Z",
+          "quote": "I am still getting non yoga pose names in the segment list",
+          "detail": "Reports failure without saying what failed (\"npx neonctl@latest init postgresql://neondb_owner:npg_ONXFU\u2026\") \u2014 no error text, path or output was supplied.",
+          "cost_usd": 0.161299,
+          "tokens": 487922,
+          "full_text": "I am still getting non yoga pose names in the segment list",
+          "kind": "prompt",
+          "target_path": null
+        },
+        {
+          "session_id": "1611d5e9-9158-4d1d-8618-b539e1754db5",
+          "ts": "2026-07-24T05:59:41.672Z",
+          "quote": "run on iphone again",
+          "detail": "Reports failure without saying what failed (\"<task-notification> <task-id>beqseyp4c</task-id> <summary>M\u2026\") \u2014 no error text, path or output was supplied.",
+          "cost_usd": 0.0,
+          "tokens": 1502542,
+          "full_text": "run on iphone again",
+          "kind": "prompt",
+          "target_path": null
+        }
+      ],
+      "escalation": [],
+      "blames_model": false,
+      "attempts": [],
+      "advice": "Say what \"wrong\" means before you re-send: the exact command you ran, the output you observed, and the output you expected."
+    },
+    {
+      "detector": "whole_file_reread",
+      "title": "Re-reading whole files instead of diffs",
+      "prescription": "Review the change, not the file: ask for `git diff` on the specific path, or point at line ranges you care about.",
+      "mechanism": "Each full re-read pushes the entire file into context again, and it stays there for the rest of the session.",
+      "severity": "high",
+      "wasted_usd": 1.9809,
+      "wasted_tokens": 1613117,
+      "occurrences": 110,
+      "evidence": [
+        {
+          "session_id": "1611d5e9-9158-4d1d-8618-b539e1754db5",
+          "ts": "2026-04-13T05:22:17.546Z",
+          "quote": "match_analysis_screen.dart",
+          "detail": "Read 211 times in one session (~375,225 redundant tokens).",
+          "cost_usd": 0.608408,
+          "tokens": 375225,
+          "full_text": null,
+          "kind": "metric",
+          "target_path": null
+        },
+        {
+          "session_id": "1611d5e9-9158-4d1d-8618-b539e1754db5",
+          "ts": "2026-04-13T05:22:18.008Z",
+          "quote": "video_tracking_screen.dart",
+          "detail": "Read 145 times in one session (~138,151 redundant tokens).",
+          "cost_usd": 0.224005,
+          "tokens": 138151,
+          "full_text": null,
+          "kind": "metric",
+          "target_path": null
+        },
+        {
+          "session_id": "1611d5e9-9158-4d1d-8618-b539e1754db5",
+          "ts": "2026-04-21T08:18:39.453Z",
+          "quote": "slot_recovery.dart",
+          "detail": "Read 37 times in one session (~70,774 redundant tokens).",
+          "cost_usd": 0.114756,
+          "tokens": 70774,
+          "full_text": null,
+          "kind": "metric",
+          "target_path": null
+        },
+        {
+          "session_id": "1611d5e9-9158-4d1d-8618-b539e1754db5",
+          "ts": "2026-04-21T06:46:27.955Z",
+          "quote": "tracking_engine.dart",
+          "detail": "Read 50 times in one session (~57,993 redundant tokens).",
+          "cost_usd": 0.094033,
+          "tokens": 57993,
+          "full_text": null,
+          "kind": "metric",
+          "target_path": null
+        },
+        {
+          "session_id": "1611d5e9-9158-4d1d-8618-b539e1754db5",
+          "ts": "2026-04-21T06:46:28.123Z",
+          "quote": "tracking_models.dart",
+          "detail": "Read 19 times in one session (~47,063 redundant tokens).",
+          "cost_usd": 0.07631,
+          "tokens": 47063,
+          "full_text": null,
+          "kind": "metric",
+          "target_path": null
+        }
+      ],
+      "escalation": [],
+      "blames_model": false,
+      "attempts": [],
+      "advice": "Review the change, not the file: ask for `git diff` on the specific path, or point at line ranges you care about."
+    },
+    {
+      "detector": "uncached_docs",
+      "title": "Re-fetching the same documentation",
+      "prescription": "Save the answer once into a project note (CLAUDE.md / AGENTS.md / .junie/guidelines.md) so the agent reads 20 lines instead of the page.",
+      "mechanism": "Fetched pages arrive as raw markup and are billed in full on every fetch, then re-sent as context for the rest of the session.",
+      "severity": "medium",
+      "wasted_usd": 0.0198,
+      "wasted_tokens": 7617,
+      "occurrences": 4,
+      "evidence": [
+        {
+          "session_id": "dcb23a0c-5ab8-41cf-ad20-2eb1feb58f36",
+          "ts": "2026-07-15T10:25:05.689Z",
+          "quote": "WebSearch",
+          "detail": "Fetched 9 times (~2,408 redundant tokens).",
+          "cost_usd": 0.010177,
+          "tokens": 2408,
+          "full_text": null,
+          "kind": "metric",
+          "target_path": null
+        },
+        {
+          "session_id": "1611d5e9-9158-4d1d-8618-b539e1754db5",
+          "ts": "2026-06-12T10:08:57.140Z",
+          "quote": "WebFetch",
+          "detail": "Fetched 47 times (~3,135 redundant tokens).",
+          "cost_usd": 0.005083,
+          "tokens": 3135,
+          "full_text": null,
+          "kind": "metric",
+          "target_path": null
+        },
+        {
+          "session_id": "1611d5e9-9158-4d1d-8618-b539e1754db5",
+          "ts": "2026-06-12T10:08:37.005Z",
+          "quote": "WebSearch",
+          "detail": "Fetched 7 times (~1,632 redundant tokens).",
+          "cost_usd": 0.002646,
+          "tokens": 1632,
+          "full_text": null,
+          "kind": "metric",
+          "target_path": null
+        },
+        {
+          "session_id": "dcb23a0c-5ab8-41cf-ad20-2eb1feb58f36",
+          "ts": "2026-07-15T10:41:32.644Z",
+          "quote": "WebFetch",
+          "detail": "Fetched 5 times (~442 redundant tokens).",
+          "cost_usd": 0.001868,
+          "tokens": 442,
+          "full_text": null,
+          "kind": "metric",
+          "target_path": null
+        }
+      ],
+      "escalation": [],
+      "blames_model": false,
+      "attempts": [],
+      "advice": "Save the answer once into a project note (CLAUDE.md / AGENTS.md / .junie/guidelines.md) so the agent reads 20 lines instead of the page."
+    }
+  ],
+  "playbook": [
+    {
+      "text": "Ask for a diagnosis before another edit: what does the model believe is wrong, and what evidence supports it?",
+      "source": "target_churn",
+      "evidence_usd": 8666.0914,
+      "occurrences": 223,
+      "rationale": "Found 223\u00d7 in your history, $8666.09 traced to it. Repeated rewrites of one file alongside repeated failures means each attempt is a guess. The conversation grows with every round, so the last guess costs several times what the first did."
+    },
+    {
+      "text": "Stop re-prompting. Give it the exact error and expected output, or switch to planning before further edits.",
+      "source": "loop",
+      "evidence_usd": 3075.6356,
+      "occurrences": 44,
+      "rationale": "Found 44\u00d7 in your history, $3075.64 traced to it. The same error recurred without the model converging on a fix. Each attempt re-sends the whole conversation, so the cost compounds while the failure stays identical \u2014 this is the model not making progress, not a badly worded prompt."
+    },
+    {
+      "text": "Pipe it: `| head -40`, `--quiet`, `-q`, or `2>&1 | tail -20`. Ask for the specific lines you need, not the whole dump.",
+      "source": "output_flood",
+      "evidence_usd": 1861.2448,
+      "occurrences": 92,
+      "rationale": "Found 92\u00d7 in your history, $1861.24 traced to it. Command output lands in the context window verbatim and is re-sent as input tokens on every later turn of the session, so one unpiped command is billed dozens of times."
+    },
+    {
+      "text": "Start a fresh session when the topic changes. Carry forward three lines of state, not the whole transcript.",
+      "source": "compaction_thrash",
+      "evidence_usd": 979.2406,
+      "occurrences": 97,
+      "rationale": "Found 97\u00d7 in your history, $979.24 traced to it. Compaction summarises history to survive, then re-sends that summary on every later turn \u2014 you pay for it forever and lose detail you can't get back."
+    },
+    {
+      "text": "Write the resolution into the project \u2014 a skill, or a rule in CLAUDE.md / AGENTS.md / .junie/guidelines.md. Run `agentlens skills` for a generated starting point.",
+      "source": "cross_session_loop",
+      "evidence_usd": 698.2774,
+      "occurrences": 4,
+      "rationale": "Found 4\u00d7 in your history, $698.28 traced to it. You solved this before and paid to solve it again. Nothing in the project tells the agent what the answer was, so every new session rediscovers it from scratch."
+    },
+    {
+      "text": "Route mechanical work \u2014 renames, formatting, boilerplate, single-file edits with a clear spec \u2014 to a cheap model. Keep the expensive one for design and debugging.",
+      "source": "model_mismatch",
+      "evidence_usd": 568.7118,
+      "occurrences": 49,
+      "rationale": "Found 49\u00d7 in your history, $568.71 traced to it. Frontier-model pricing buys reasoning depth. Mechanical edits don't use it, so you pay the premium for nothing."
+    },
+    {
+      "text": "Put the acceptance check in the prompt itself: \"\u2026and `pytest -q` must pass\". Make the agent verify in the same turn it edits.",
+      "source": "edit_without_test",
+      "evidence_usd": 433.2226,
+      "occurrences": 1099,
+      "rationale": "Found 1099\u00d7 in your history, $433.22 traced to it. An unverified edit that turns out wrong triggers a rework loop, and a rework loop re-sends the entire conversation. A test run is far cheaper than discovering the problem three turns later."
+    },
+    {
+      "text": "Name the file, the expected behaviour, and the check that proves it: \"In @src/auth.py, make login() reject expired tokens; `pytest tests/test_auth.py` must pass.\"",
+      "source": "vague_instruction",
+      "evidence_usd": 74.9808,
+      "occurrences": 34,
+      "rationale": "Found 34\u00d7 in your history, $74.98 traced to it. With no file and no acceptance criterion the agent has to discover what you meant, and that discovery is billed to you at full rate."
+    }
+  ],
+  "sessions": [
+    {
+      "session_id": "09b44463-58a3-4084-83fb-cccd8134a91f",
+      "provider": "claude-code",
+      "title": "<REDACTED:url> Read the doc, ",
+      "started_at": "2026-07-19T13:06:27.762Z",
+      "cost_usd": 0.0,
+      "tokens": 4098005,
+      "peak_context_pct": 32.67,
+      "compactions": 0,
+      "repo_id": "7831088c9a329603"
+    },
+    {
+      "session_id": "0cb6bd0a-2765-4384-8ca1-dcab3158be54",
+      "provider": "gemini-cli",
+      "title": "Task id \"39e47e3c-1ebd-4e4c-beaf-174a7b27bccc/task-73\" finished with result:",
+      "started_at": "2026-07-05T15:51:16.080097Z",
+      "cost_usd": 0.0,
+      "tokens": 0,
+      "peak_context_pct": 0.0,
+      "compactions": 0,
+      "repo_id": null
+    },
+    {
+      "session_id": "11d264e9-5ca9-4560-8ca2-f156de83baba",
+      "provider": "gemini-cli",
+      "title": "What is Apache Spark?",
+      "started_at": "2026-07-05T16:14:11.700838Z",
+      "cost_usd": 0.0,
+      "tokens": 0,
+      "peak_context_pct": 0.0,
+      "compactions": 0,
+      "repo_id": null
+    },
+    {
+      "session_id": "1611d5e9-9158-4d1d-8618-b539e1754db5",
+      "provider": "claude-code",
+      "title": "I need to understand the local/complete video analysis pipeline in this Flutter ",
+      "started_at": "2026-04-13T05:20:59.249Z",
+      "cost_usd": 1844.421372,
+      "tokens": 1205920056,
+      "peak_context_pct": 100.0,
+      "compactions": 22,
+      "repo_id": "bcf1663d58fafa4e"
+    },
+    {
+      "session_id": "1a3056ec-71ad-4681-9bb5-1e732f48da8b",
+      "provider": "gemini-cli",
+      "title": "Task id \"39e47e3c-1ebd-4e4c-beaf-174a7b27bccc/task-184\" finished with result:",
+      "started_at": "2026-07-05T16:10:08.918578Z",
+      "cost_usd": 0.0,
+      "tokens": 0,
+      "peak_context_pct": 0.0,
+      "compactions": 0,
+      "repo_id": null
+    },
+    {
+      "session_id": "284d087a-be37-47f5-8123-60c32fab97a5",
+      "provider": "gemini-cli",
+      "title": "Task id \"39e47e3c-1ebd-4e4c-beaf-174a7b27bccc/task-136\" finished with result:",
+      "started_at": "2026-07-05T16:01:05.421612Z",
+      "cost_usd": 0.0,
+      "tokens": 0,
+      "peak_context_pct": 0.0,
+      "compactions": 0,
+      "repo_id": null
+    },
+    {
+      "session_id": "321faf4c-331c-46ed-afe3-5e8ec64bca2c",
+      "provider": "gemini-cli",
+      "title": "Check if RAG response has been generated",
+      "started_at": "2026-07-05T16:14:29.149645Z",
+      "cost_usd": 0.0,
+      "tokens": 0,
+      "peak_context_pct": 0.0,
+      "compactions": 0,
+      "repo_id": null
+    },
+    {
+      "session_id": "47ead0b6-f23f-4878-9685-d6e56a8ed80e",
+      "provider": "claude-code",
+      "title": "<REDACTED:url> ",
+      "started_at": "2026-06-30T06:31:09.872Z",
+      "cost_usd": 15.073632,
+      "tokens": 35729622,
+      "peak_context_pct": 83.35,
+      "compactions": 1,
+      "repo_id": "7f4574e431955f01"
+    },
+    {
+      "session_id": "4995bc3a-4aa1-4ac8-9487-583e14c67c59",
+      "provider": "gemini-cli",
+      "title": "Check ollama pull progress again",
+      "started_at": "2026-07-05T15:59:10.625618Z",
+      "cost_usd": 0.0,
+      "tokens": 0,
+      "peak_context_pct": 0.0,
+      "compactions": 0,
+      "repo_id": null
+    },
+    {
+      "session_id": "4d168922-a047-4c0a-b23b-e1ab345ee9af",
+      "provider": "claude-code",
+      "title": "You are scaffolding the shared schema library for a project called \"PosturePilot",
+      "started_at": "2026-04-13T06:21:42.425Z",
+      "cost_usd": 398.072425,
+      "tokens": 552917504,
+      "peak_context_pct": 100.0,
+      "compactions": 16,
+      "repo_id": "b1e58470dd247c25"
+    },
+    {
+      "session_id": "5ed27ebf-4db8-4b81-aa5f-944892557a96",
+      "provider": "gemini-cli",
+      "title": "Task id \"39e47e3c-1ebd-4e4c-beaf-174a7b27bccc/task-45\" finished with result:",
+      "started_at": "2026-07-05T15:49:13.708472Z",
+      "cost_usd": 0.0,
+      "tokens": 0,
+      "peak_context_pct": 0.0,
+      "compactions": 0,
+      "repo_id": null
+    },
+    {
+      "session_id": "680b3c67-73b4-4e16-9e3c-f216e2d5528f",
+      "provider": "gemini-cli",
+      "title": "Task id \"39e47e3c-1ebd-4e4c-beaf-174a7b27bccc/task-219\" finished with result:",
+      "started_at": "2026-07-05T16:14:44.411446Z",
+      "cost_usd": 0.0,
+      "tokens": 0,
+      "peak_context_pct": 0.0,
+      "compactions": 0,
+      "repo_id": null
+    },
+    {
+      "session_id": "6b0fcef0-c672-4cdd-9d02-bcdc732c9a41",
+      "provider": "gemini-cli",
+      "title": "Task id \"39e47e3c-1ebd-4e4c-beaf-174a7b27bccc/task-171\" finished with result:",
+      "started_at": "2026-07-05T16:02:22.047513Z",
+      "cost_usd": 0.0,
+      "tokens": 0,
+      "peak_context_pct": 0.0,
+      "compactions": 0,
+      "repo_id": null
+    },
+    {
+      "session_id": "744bc338-c06d-4b8a-9403-ee677b3f02f0",
+      "provider": "gemini-cli",
+      "title": "The command output has stabilized for 5s. The output delta since last check is:",
+      "started_at": "2026-07-05T16:13:09.092882Z",
+      "cost_usd": 0.0,
+      "tokens": 0,
+      "peak_context_pct": 0.0,
+      "compactions": 0,
+      "repo_id": null
+    },
+    {
+      "session_id": "7cdb31c6-32c7-4006-8b59-cd6bacebe937",
+      "provider": "claude-code",
+      "title": "check folder on what is the learning status and tell me what should I learn next",
+      "started_at": "2026-07-07T08:34:02.485Z",
+      "cost_usd": 0.0,
+      "tokens": 2827343,
+      "peak_context_pct": 44.96,
+      "compactions": 0,
+      "repo_id": "f3c273c82be38f1e"
+    },
+    {
+      "session_id": "80a60162-42ab-4bb9-b552-5806a7320f41",
+      "provider": "gemini-cli",
+      "title": "Your scheduled timer was cancelled because you received another message.",
+      "started_at": "2026-07-05T16:01:05.421990Z",
+      "cost_usd": 0.0,
+      "tokens": 0,
+      "peak_context_pct": 0.0,
+      "compactions": 0,
+      "repo_id": null
+    },
+    {
+      "session_id": "81877e8f-14d1-42db-a8a4-9db219696937",
+      "provider": "gemini-cli",
+      "title": "Your scheduled timer was cancelled because you received another message.",
+      "started_at": "2026-07-05T16:13:09.095730Z",
+      "cost_usd": 0.0,
+      "tokens": 0,
+      "peak_context_pct": 0.0,
+      "compactions": 0,
+      "repo_id": null
+    },
+    {
+      "session_id": "82eb4c8b-2379-47c9-a89b-14ab05a617d1",
+      "provider": "gemini-cli",
+      "title": "exit",
+      "started_at": "2026-07-05T16:14:44.271870Z",
+      "cost_usd": 0.0,
+      "tokens": 0,
+      "peak_context_pct": 0.0,
+      "compactions": 0,
+      "repo_id": null
+    },
+    {
+      "session_id": "87fa3e1d-d179-4f90-a84b-f7b9612d9646",
+      "provider": "gemini-cli",
+      "title": "Check if ollama pull nomic-embed-text has finished",
+      "started_at": "2026-07-05T15:58:05.910081Z",
+      "cost_usd": 0.0,
+      "tokens": 0,
+      "peak_context_pct": 0.0,
+      "compactions": 0,
+      "repo_id": null
+    },
+    {
+      "session_id": "88c555b7-52eb-4d42-aad7-0c55ca2559fd",
+      "provider": "gemini-cli",
+      "title": "Your scheduled timer was cancelled because you received another message.",
+      "started_at": "2026-07-05T16:13:37.116833Z",
+      "cost_usd": 0.0,
+      "tokens": 0,
+      "peak_context_pct": 0.0,
+      "compactions": 0,
+      "repo_id": null
+    },
+    {
+      "session_id": "908c1bab-745e-4d9c-bbb9-538c823daa1a",
+      "provider": "gemini-cli",
+      "title": "Check if local Ollama server is running",
+      "started_at": "2026-07-05T15:57:27.390343Z",
+      "cost_usd": 0.0,
+      "tokens": 0,
+      "peak_context_pct": 0.0,
+      "compactions": 0,
+      "repo_id": null
+    },
+    {
+      "session_id": "91c4f3fa-cfda-48ac-840d-64460180331f",
+      "provider": "gemini-cli",
+      "title": "Check if pip install has finished",
+      "started_at": "2026-07-05T15:49:10.425375Z",
+      "cost_usd": 0.0,
+      "tokens": 0,
+      "peak_context_pct": 0.0,
+      "compactions": 0,
+      "repo_id": null
+    },
+    {
+      "session_id": "93172e28-bda9-4866-ae80-103cfe57c77e",
+      "provider": "gemini-cli",
+      "title": "Check if pytest has finished downloading the model and running the tests",
+      "started_at": "2026-07-05T15:50:32.504880Z",
+      "cost_usd": 0.0,
+      "tokens": 0,
+      "peak_context_pct": 0.0,
+      "compactions": 0,
+      "repo_id": null
+    },
+    {
+      "session_id": "9ecde344-a919-464e-bcb6-24a37fad2541",
+      "provider": "claude-code",
+      "title": "Investigate why the Flutter app lock screen shows \"Authentication failed. Please",
+      "started_at": "2026-04-24T16:33:01.939Z",
+      "cost_usd": 285.131384,
+      "tokens": 294226597,
+      "peak_context_pct": 100.0,
+      "compactions": 11,
+      "repo_id": "f7f5140ba2cbef9b"
+    },
+    {
+      "session_id": "b154e008-76fc-4acb-a26b-e7ca54034c59",
+      "provider": "gemini-cli",
+      "title": "Your scheduled timer was cancelled because you received another message.",
+      "started_at": "2026-07-05T15:51:16.080988Z",
+      "cost_usd": 0.0,
+      "tokens": 0,
+      "peak_context_pct": 0.0,
+      "compactions": 0,
+      "repo_id": null
+    },
+    {
+      "session_id": "b1ed75d8-76aa-4675-a734-5f2a348dcff0",
+      "provider": "gemini-cli",
+      "title": "Your scheduled timer was cancelled because you received another message.",
+      "started_at": "2026-07-05T16:10:08.918927Z",
+      "cost_usd": 0.0,
+      "tokens": 0,
+      "peak_context_pct": 0.0,
+      "compactions": 0,
+      "repo_id": null
+    },
+    {
+      "session_id": "b47cfff7-b888-40a3-81aa-f8580301f61e",
+      "provider": "gemini-cli",
+      "title": "Your scheduled timer was cancelled because you received another message.",
+      "started_at": "2026-07-05T16:02:22.047973Z",
+      "cost_usd": 0.0,
+      "tokens": 0,
+      "peak_context_pct": 0.0,
+      "compactions": 0,
+      "repo_id": null
+    },
+    {
+      "session_id": "c024b7f2-2c04-43f3-a5b9-f017363238dc",
+      "provider": "gemini-cli",
+      "title": "Task id \"39e47e3c-1ebd-4e4c-beaf-174a7b27bccc/task-205\" finished with result:",
+      "started_at": "2026-07-05T16:13:18.068135Z",
+      "cost_usd": 0.0,
+      "tokens": 0,
+      "peak_context_pct": 0.0,
+      "compactions": 0,
+      "repo_id": null
+    },
+    {
+      "session_id": "c3deb12c-d35c-43d6-84e7-f8abdbe5c672",
+      "provider": "claude-code",
+      "title": "I want to do this but dont have anthropic key, what can I do",
+      "started_at": "2026-06-26T06:46:53.381Z",
+      "cost_usd": 0.346289,
+      "tokens": 250010,
+      "peak_context_pct": 17.61,
+      "compactions": 0,
+      "repo_id": "31b2ee774facea6e"
+    },
+    {
+      "session_id": "d34fd443-dc0c-4243-b9f6-4561d6baa92b",
+      "provider": "gemini-cli",
+      "title": "What is Apache Spark?",
+      "started_at": "2026-07-05T16:13:17.940341Z",
+      "cost_usd": 0.0,
+      "tokens": 0,
+      "peak_context_pct": 0.0,
+      "compactions": 0,
+      "repo_id": null
+    },
+    {
+      "session_id": "d7b9131a-e844-4f88-93bc-53a1d711e94e",
+      "provider": "gemini-cli",
+      "title": "Check if pytest has completed",
+      "started_at": "2026-07-05T15:49:38.398598Z",
+      "cost_usd": 0.0,
+      "tokens": 0,
+      "peak_context_pct": 0.0,
+      "compactions": 0,
+      "repo_id": null
+    },
+    {
+      "session_id": "dcb23a0c-5ab8-41cf-ad20-2eb1feb58f36",
+      "provider": "claude-code",
+      "title": "I hvae google fit on my phone, I have the zepp app, i have the amzefit trex pro ",
+      "started_at": "2026-07-15T10:24:20.281Z",
+      "cost_usd": 21.486368,
+      "tokens": 6035124,
+      "peak_context_pct": 46.01,
+      "compactions": 0,
+      "repo_id": "f25443933158594c"
+    },
+    {
+      "session_id": "e2465039-57c1-4896-9db6-802752bae10e",
+      "provider": "gemini-cli",
+      "title": "Check if ollama pull nomic-embed-text has finished now",
+      "started_at": "2026-07-05T16:00:44.612816Z",
+      "cost_usd": 0.0,
+      "tokens": 0,
+      "peak_context_pct": 0.0,
+      "compactions": 0,
+      "repo_id": null
+    },
+    {
+      "session_id": "ea594ab8-d123-48a0-a2f8-80c480bb928c",
+      "provider": "gemini-cli",
+      "title": "Check pytest status again",
+      "started_at": "2026-07-05T15:49:58.035354Z",
+      "cost_usd": 0.0,
+      "tokens": 0,
+      "peak_context_pct": 0.0,
+      "compactions": 0,
+      "repo_id": null
+    },
+    {
+      "session_id": "f07aa0c5-e343-4739-bc4d-283254fe9ce0",
+      "provider": "gemini-cli",
+      "title": "The command output has stabilized for 5s. The output delta since last check is:",
+      "started_at": "2026-07-05T16:14:38.131962Z",
+      "cost_usd": 0.0,
+      "tokens": 0,
+      "peak_context_pct": 0.0,
+      "compactions": 0,
+      "repo_id": null
+    },
+    {
+      "session_id": "f6034570-78a3-42de-ba62-eacb4d19258f",
+      "provider": "gemini-cli",
+      "title": "The command output has stabilized for 5s. The output delta since last check is:",
+      "started_at": "2026-07-05T16:13:37.114190Z",
+      "cost_usd": 0.0,
+      "tokens": 0,
+      "peak_context_pct": 0.0,
+      "compactions": 0,
+      "repo_id": null
+    },
+    {
+      "session_id": "resp_1",
+      "provider": "codex",
+      "title": null,
+      "started_at": "",
+      "cost_usd": 0.0,
+      "tokens": 276,
+      "peak_context_pct": 0.09,
+      "compactions": 0,
+      "repo_id": null
+    },
+    {
+      "session_id": "resp_2",
+      "provider": "codex",
+      "title": null,
+      "started_at": "",
+      "cost_usd": 0.0,
+      "tokens": 226,
+      "peak_context_pct": 0.08,
+      "compactions": 0,
+      "repo_id": null
+    },
+    {
+      "session_id": "resp_3",
+      "provider": "codex",
+      "title": null,
+      "started_at": "",
+      "cost_usd": 0.0,
+      "tokens": 252,
+      "peak_context_pct": 0.08,
+      "compactions": 0,
+      "repo_id": null
+    },
+    {
+      "session_id": "rollout-2025-12-11T15-19-35-019b0cd0-e561-7c93-a424-e282281eeecd",
+      "provider": "codex",
+      "title": null,
+      "started_at": "2025-12-11T09:49:42.443Z",
+      "cost_usd": 1.817203,
+      "tokens": 2395887,
+      "peak_context_pct": 100.0,
+      "compactions": 0,
+      "repo_id": "d5c1162eb0d00dcb"
+    },
+    {
+      "session_id": "rollout-2026-05-02T13-52-30-019de7c8-31b1-7761-b781-ba5338154831",
+      "provider": "codex",
+      "title": null,
+      "started_at": "2026-05-02T08:25:05.992Z",
+      "cost_usd": 216.130258,
+      "tokens": 301390309,
+      "peak_context_pct": 100.0,
+      "compactions": 9,
+      "repo_id": "f7f5140ba2cbef9b"
+    },
+    {
+      "session_id": "rollout-2026-05-02T13-52-30-019de7c8-327c-7900-bf33-08a03a023f29",
+      "provider": "codex",
+      "title": null,
+      "started_at": "2026-05-02T17:12:38.629Z",
+      "cost_usd": 212.026472,
+      "tokens": 298787698,
+      "peak_context_pct": 100.0,
+      "compactions": 9,
+      "repo_id": "bcf1663d58fafa4e"
+    },
+    {
+      "session_id": "rollout-2026-05-02T13-52-31-019de7c8-38e0-7781-85da-fb50c04fed05",
+      "provider": "codex",
+      "title": null,
+      "started_at": "2026-05-10T04:01:37.341Z",
+      "cost_usd": 80.709076,
+      "tokens": 113580563,
+      "peak_context_pct": 100.0,
+      "compactions": 3,
+      "repo_id": "4132899f76d03551"
+    },
+    {
+      "session_id": "rollout-2026-05-02T13-52-32-019de7c8-3b25-72a2-a7de-03cb10f4a78f",
+      "provider": "codex",
+      "title": null,
+      "started_at": "2026-05-03T12:53:14.302Z",
+      "cost_usd": 221.566234,
+      "tokens": 312286322,
+      "peak_context_pct": 100.0,
+      "compactions": 6,
+      "repo_id": "b1e58470dd247c25"
+    },
+    {
+      "session_id": "rollout-2026-05-02T14-03-04-019de7d1-de81-7a21-9501-b004ec533754",
+      "provider": "codex",
+      "title": null,
+      "started_at": "2026-05-02T08:33:09.742Z",
+      "cost_usd": 0.0,
+      "tokens": 1314042,
+      "peak_context_pct": 100.0,
+      "compactions": 0,
+      "repo_id": "f7f5140ba2cbef9b"
+    },
+    {
+      "session_id": "rollout-2026-05-02T22-46-43-019de9b1-4890-7002-a659-ef7d2bd4c561",
+      "provider": "codex",
+      "title": null,
+      "started_at": "2026-05-02T17:16:47.292Z",
+      "cost_usd": 0.0,
+      "tokens": 1246272,
+      "peak_context_pct": 100.0,
+      "compactions": 0,
+      "repo_id": "bcf1663d58fafa4e"
+    },
+    {
+      "session_id": "rollout-2026-05-03T10-43-51-019dec41-d814-7792-844c-1bc7d051e403",
+      "provider": "codex",
+      "title": null,
+      "started_at": "2026-05-03T05:13:57.427Z",
+      "cost_usd": 0.0,
+      "tokens": 818102,
+      "peak_context_pct": 100.0,
+      "compactions": 0,
+      "repo_id": "f7f5140ba2cbef9b"
+    },
+    {
+      "session_id": "rollout-2026-05-03T18-42-31-019dedf8-1397-7ec0-84b7-d11225182cba",
+      "provider": "codex",
+      "title": null,
+      "started_at": "2026-05-03T13:12:35.249Z",
+      "cost_usd": 0.0,
+      "tokens": 1713793,
+      "peak_context_pct": 100.0,
+      "compactions": 0,
+      "repo_id": "b1e58470dd247c25"
+    },
+    {
+      "session_id": "rollout-2026-05-04T10-32-23-019df15d-b382-7ae0-8ae6-9a3cacabb9e7",
+      "provider": "codex",
+      "title": null,
+      "started_at": "2026-05-04T05:02:27.949Z",
+      "cost_usd": 0.0,
+      "tokens": 1159012,
+      "peak_context_pct": 100.0,
+      "compactions": 0,
+      "repo_id": "f7f5140ba2cbef9b"
+    },
+    {
+      "session_id": "rollout-2026-05-09T13-06-18-019e0baa-6a43-7343-a689-06efbb3e1701",
+      "provider": "codex",
+      "title": null,
+      "started_at": "2026-05-09T07:36:35.305Z",
+      "cost_usd": 0.0,
+      "tokens": 127869,
+      "peak_context_pct": 63.5,
+      "compactions": 0,
+      "repo_id": "b1e58470dd247c25"
+    },
+    {
+      "session_id": "rollout-2026-05-10T11-50-28-019e108b-597f-7e93-9e0a-8e138a731270",
+      "provider": "codex",
+      "title": null,
+      "started_at": "2026-05-10T06:20:33.292Z",
+      "cost_usd": 0.0,
+      "tokens": 782200,
+      "peak_context_pct": 100.0,
+      "compactions": 0,
+      "repo_id": "4132899f76d03551"
+    },
+    {
+      "session_id": "rollout-2026-05-10T14-32-25-019e111f-9ed9-7e01-b6fd-445d3c98ebf8",
+      "provider": "codex",
+      "title": null,
+      "started_at": "2026-05-10T09:02:29.336Z",
+      "cost_usd": 0.0,
+      "tokens": 2146753,
+      "peak_context_pct": 100.0,
+      "compactions": 0,
+      "repo_id": "bcf1663d58fafa4e"
+    },
+    {
+      "session_id": "rollout-2026-05-11T09-42-44-019e153c-c4a1-7ee0-b3c4-70c1f0b8e93e",
+      "provider": "codex",
+      "title": null,
+      "started_at": "2026-05-11T04:12:48.990Z",
+      "cost_usd": 0.0,
+      "tokens": 35849,
+      "peak_context_pct": 17.86,
+      "compactions": 0,
+      "repo_id": "f7f5140ba2cbef9b"
+    },
+    {
+      "session_id": "rollout-2026-05-11T15-54-07-019e1690-c630-7090-a99c-54fcd099ad4b",
+      "provider": "codex",
+      "title": null,
+      "started_at": "2026-05-11T10:24:11.687Z",
+      "cost_usd": 0.0,
+      "tokens": 1118140,
+      "peak_context_pct": 100.0,
+      "compactions": 0,
+      "repo_id": "b1e58470dd247c25"
+    },
+    {
+      "session_id": "rollout-2026-05-11T16-08-51-019e169e-4626-7bc1-b9d6-a666f3661171",
+      "provider": "codex",
+      "title": null,
+      "started_at": "2026-05-11T10:38:56.165Z",
+      "cost_usd": 0.0,
+      "tokens": 1362336,
+      "peak_context_pct": 100.0,
+      "compactions": 0,
+      "repo_id": "bcf1663d58fafa4e"
+    },
+    {
+      "session_id": "rollout-2026-05-11T21-39-12-019e17cc-b4e1-7083-b99c-5c7a2813b056",
+      "provider": "codex",
+      "title": null,
+      "started_at": "2026-05-11T16:09:18.386Z",
+      "cost_usd": 0.0,
+      "tokens": 35657,
+      "peak_context_pct": 17.71,
+      "compactions": 0,
+      "repo_id": "f7f5140ba2cbef9b"
+    },
+    {
+      "session_id": "rollout-2026-05-11T21-43-17-019e17d0-7482-7f03-a950-47532dc872f4",
+      "provider": "codex",
+      "title": null,
+      "started_at": "2026-05-11T16:13:22.124Z",
+      "cost_usd": 0.0,
+      "tokens": 30923,
+      "peak_context_pct": 15.37,
+      "compactions": 0,
+      "repo_id": "b1e58470dd247c25"
+    },
+    {
+      "session_id": "rollout-2026-07-16T09-50-32-019f6927-a092-7470-9128-dbea317bf212",
+      "provider": "codex",
+      "title": null,
+      "started_at": "2026-07-16T04:21:04.885Z",
+      "cost_usd": 0.096589,
+      "tokens": 103935,
+      "peak_context_pct": 25.65,
+      "compactions": 0,
+      "repo_id": "9ed7063cbbfb91e1"
+    },
+    {
+      "session_id": "rollout-2026-07-16T09-53-37-019f692a-73f9-7cd1-9c16-f4ffe1cfbf4f",
+      "provider": "codex",
+      "title": null,
+      "started_at": "2026-07-16T04:23:50.781Z",
+      "cost_usd": 0.645058,
+      "tokens": 819391,
+      "peak_context_pct": 100.0,
+      "compactions": 0,
+      "repo_id": "f25443933158594c"
+    },
+    {
+      "session_id": "rollout-2026-07-24T11-42-07-019f92c0-a77c-7cf2-afc0-0538ed309a7d",
+      "provider": "codex",
+      "title": null,
+      "started_at": "2026-07-24T06:12:13.589Z",
+      "cost_usd": 0.0,
+      "tokens": 127893,
+      "peak_context_pct": 63.73,
+      "compactions": 0,
+      "repo_id": "bcf1663d58fafa4e"
+    },
+    {
+      "session_id": "rollout-2026-07-24T11-46-48-019f92c4-f181-79d0-b54b-f23d69776fc9",
+      "provider": "codex",
+      "title": null,
+      "started_at": "2026-07-24T06:16:54.409Z",
+      "cost_usd": 0.0,
+      "tokens": 462411,
+      "peak_context_pct": 100.0,
+      "compactions": 0,
+      "repo_id": "f7f5140ba2cbef9b"
+    },
+    {
+      "session_id": "rollout-2026-07-24T13-22-06-019f931c-32d3-7f72-bcc8-ef19933de037",
+      "provider": "codex",
+      "title": null,
+      "started_at": "2026-07-24T07:52:11.845Z",
+      "cost_usd": 0.0,
+      "tokens": 32145,
+      "peak_context_pct": 15.96,
+      "compactions": 0,
+      "repo_id": "bcf1663d58fafa4e"
+    },
+    {
+      "session_id": "rollout-2026-07-24T13-34-41-019f9327-b83f-7b22-88c2-5e5e77ce7c85",
+      "provider": "codex",
+      "title": null,
+      "started_at": "2026-07-24T08:04:49.126Z",
+      "cost_usd": 0.0,
+      "tokens": 27098,
+      "peak_context_pct": 13.39,
+      "compactions": 0,
+      "repo_id": "f7f5140ba2cbef9b"
+    },
+    {
+      "session_id": "rollout-2026-07-24T13-41-20-019f932d-cdd3-7632-985f-bde191b870e5",
+      "provider": "codex",
+      "title": null,
+      "started_at": "2026-07-24T08:11:30.749Z",
+      "cost_usd": 0.0,
+      "tokens": 1365992,
+      "peak_context_pct": 100.0,
+      "compactions": 0,
+      "repo_id": "f7f5140ba2cbef9b"
+    },
+    {
+      "session_id": "rollout-2026-07-24T19-24-05-019f9467-9aaf-79d1-a110-ce88fe9db3e0",
+      "provider": "codex",
+      "title": null,
+      "started_at": "2026-07-24T13:54:10.564Z",
+      "cost_usd": 0.0,
+      "tokens": 7660755,
+      "peak_context_pct": 100.0,
+      "compactions": 0,
+      "repo_id": "bcf1663d58fafa4e"
+    },
+    {
+      "session_id": "rollout-2026-07-25T13-13-11-019f983a-6503-7b01-bec5-c4dba9c03bc0",
+      "provider": "codex",
+      "title": null,
+      "started_at": "2026-07-25T07:43:20.065Z",
+      "cost_usd": 0.0,
+      "tokens": 324286,
+      "peak_context_pct": 100.0,
+      "compactions": 0,
+      "repo_id": "f7f5140ba2cbef9b"
+    },
+    {
+      "session_id": "rollout-2026-07-25T15-56-42-019f98d0-1834-7521-bb3c-b5f7656ed214",
+      "provider": "codex",
+      "title": null,
+      "started_at": "2026-07-25T10:26:48.894Z",
+      "cost_usd": 0.0,
+      "tokens": 176492,
+      "peak_context_pct": 87.95,
+      "compactions": 0,
+      "repo_id": "f7f5140ba2cbef9b"
+    },
+    {
+      "session_id": "rollout-2026-07-25T17-45-50-019f9934-0314-7f93-a329-172069eccf93",
+      "provider": "codex",
+      "title": null,
+      "started_at": "2026-07-25T12:15:56.286Z",
+      "cost_usd": 0.0,
+      "tokens": 67298,
+      "peak_context_pct": 33.47,
+      "compactions": 0,
+      "repo_id": "f7f5140ba2cbef9b"
+    },
+    {
+      "session_id": "rollout-2026-07-25T17-58-27-019f993f-8e12-7022-acf6-083c63c5b9c4",
+      "provider": "codex",
+      "title": null,
+      "started_at": "2026-07-25T12:28:34.168Z",
+      "cost_usd": 0.0,
+      "tokens": 31066,
+      "peak_context_pct": 15.37,
+      "compactions": 0,
+      "repo_id": "f7f5140ba2cbef9b"
+    },
+    {
+      "session_id": "rollout-2026-07-25T18-21-06-019f9954-4bdd-7e10-b65c-96c2d19521a2",
+      "provider": "codex",
+      "title": null,
+      "started_at": "2026-07-25T12:51:15.916Z",
+      "cost_usd": 0.0,
+      "tokens": 214051,
+      "peak_context_pct": 100.0,
+      "compactions": 0,
+      "repo_id": "f7f5140ba2cbef9b"
+    },
+    {
+      "session_id": "rollout-2026-07-25T18-28-28-019f995b-0c93-7571-976c-c2dbc57e3d78",
+      "provider": "codex",
+      "title": null,
+      "started_at": "2026-07-25T12:58:33.923Z",
+      "cost_usd": 0.0,
+      "tokens": 188135,
+      "peak_context_pct": 93.89,
+      "compactions": 0,
+      "repo_id": "bcf1663d58fafa4e"
+    },
+    {
+      "session_id": "rollout-2026-08-02T18-28-35-019fc28e-0807-7162-a733-12007e48d4c7",
+      "provider": "codex",
+      "title": null,
+      "started_at": "2026-08-02T12:59:35.977Z",
+      "cost_usd": 0.17908,
+      "tokens": 212719,
+      "peak_context_pct": 52.7,
+      "compactions": 0,
+      "repo_id": "15fe7fe5b8f21b16"
+    },
+    {
+      "session_id": "rollout-2026-08-09T13-59-32-019fe5a4-37ca-7ea3-b146-9bc1ade0c2e0",
+      "provider": "codex",
+      "title": null,
+      "started_at": "2026-08-09T08:29:38.492Z",
+      "cost_usd": 0.0,
+      "tokens": 271334,
+      "peak_context_pct": 100.0,
+      "compactions": 0,
+      "repo_id": "f7f5140ba2cbef9b"
+    },
+    {
+      "session_id": "rollout-2026-08-11T20-32-05-019ff158-535e-7900-a2a9-c28db9818544",
+      "provider": "codex",
+      "title": null,
+      "started_at": "2026-08-11T15:03:15.734Z",
+      "cost_usd": 0.698684,
+      "tokens": 884402,
+      "peak_context_pct": 100.0,
+      "compactions": 0,
+      "repo_id": "f7f5140ba2cbef9b"
+    },
+    {
+      "session_id": "rollout-2026-08-14T10-06-36-019ffe8e-c141-7b30-9aa7-171900a5ccfe",
+      "provider": "codex",
+      "title": null,
+      "started_at": "2026-08-14T04:36:43.627Z",
+      "cost_usd": 0.0,
+      "tokens": 32109,
+      "peak_context_pct": 15.95,
+      "compactions": 0,
+      "repo_id": "f7f5140ba2cbef9b"
+    },
+    {
+      "session_id": "transcript",
+      "provider": "gemini-cli",
+      "title": "<USER_REQUEST>",
+      "started_at": "",
+      "cost_usd": 0.0,
+      "tokens": 0,
+      "peak_context_pct": 0.0,
+      "compactions": 0,
+      "repo_id": null
+    },
+    {
+      "session_id": "transcript_full",
+      "provider": "gemini-cli",
+      "title": "<USER_REQUEST>",
+      "started_at": "",
+      "cost_usd": 0.0,
+      "tokens": 0,
+      "peak_context_pct": 0.0,
+      "compactions": 0,
+      "repo_id": null
+    }
+  ]
+}
