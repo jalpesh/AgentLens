@@ -397,6 +397,24 @@ class Store:
             ).fetchall()
         ]
 
+    def model_token_totals(self) -> dict[str, int]:
+        """Total tokens billed per model, across every event that named one.
+
+        Used to find models the pricing table has never heard of — those
+        events still get cost recomputed (see `pricing.cost_of`), but an
+        unrecognised model silently prices at $0, so a heavy-usage model this
+        table doesn't know about would otherwise undercount total spend with
+        no visible sign anything was skipped. See `cmd_doctor`'s pricing
+        coverage check."""
+        return {
+            r["model"]: r["toks"]
+            for r in self.conn.execute(
+                "SELECT model, SUM(tok_input + tok_output + tok_cache_read "
+                "+ tok_cache_write + tok_reasoning) AS toks FROM events "
+                "WHERE model IS NOT NULL GROUP BY model"
+            ).fetchall()
+        }
+
 
 def _row_to_event(r: sqlite3.Row) -> Event:
     from .schema import ToolInfo

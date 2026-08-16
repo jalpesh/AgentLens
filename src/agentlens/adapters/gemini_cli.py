@@ -7,6 +7,20 @@ field names. This adapter is written defensively against several plausible
 shapes (JSON array, JSONL, and an OpenAI-style ``choices`` envelope) and
 degrades to zero events rather than raising when none match.
 
+``~/.gemini`` is not exclusively Gemini CLI's directory. Google Antigravity —
+a separate IDE product built on Gemini — also stores data there: tool-schema
+manifests, artifact/task metadata (plans, walkthroughs, task summaries as
+JSON), and its actual conversation "memory" as Protocol Buffer files, which
+this adapter cannot read and makes no attempt to (undocumented, binary,
+versioned — reverse-engineering it is out of scope; see the project's
+"never guess a format" rule). Confirmed via a real user's history 2026-08-15:
+every file under their ``~/.gemini`` was one of these two Antigravity shapes,
+none were genuine Gemini CLI conversation logs — and because neither shape
+carries a ``role`` field, every one of them was previously getting fabricated
+into a fake "session" with a synthetic ``Role.USER`` turn built from whatever
+text field happened to exist. Records with no recognized role are now
+skipped outright rather than guessed at.
+
 If it silently finds nothing on your machine: run
 ``agentlens doctor -v`` and file an issue with one sanitised sample file —
 that is exactly the feedback loop that turns "experimental" into "full"
@@ -93,7 +107,27 @@ class GeminiCliAdapter(Adapter):
             ts = str(self.dig(rec, "timestamp", "ts", "createdAt") or "")
             model = self.dig(rec, "model", "modelId")
             role_raw = str(self.dig(rec, "role", "type") or "").lower()
-            role = _ROLE_MAP.get(role_raw, Role.SYSTEM)
+            role = _ROLE_MAP.get(role_raw)
+            if role is None:
+                # No recognized role at all — most likely not a conversation
+                # turn. `~/.gemini` isn't exclusively Gemini CLI's directory:
+                # Google Antigravity (a separate IDE product built on Gemini)
+                # also stores data there — tool-schema manifests
+                # (`{"name","description","parameters"}`) and artifact/task
+                # metadata (`{"artifactType","summary","updatedAt"}`) — none
+                # of which carry a role field, none of which are chat logs.
+                # Previously this fell through to the `else` branch below and
+                # got fabricated into a `Role.USER` "prompt" out of whatever
+                # text field happened to exist, which is how a real user's
+                # history ended up with 30 "Gemini CLI sessions" that were
+                # actually Antigravity task-completion notices and artifact
+                # summaries — none ever carrying usage data, since only
+                # genuine assistant turns do, which inflated the session
+                # count while contributing nothing to any dollar figure.
+                # Skipping outright is more honest than guessing at a role
+                # for a record with none. Found via real usage data,
+                # 2026-08-16.
+                continue
 
             base = dict(
                 session_id=session_id, provider=self.provider, seq=seq, ts=ts,

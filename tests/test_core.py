@@ -48,6 +48,60 @@ def test_unknown_model_costs_zero_rather_than_guessing():
     assert cost_of("some-model-we-have-never-seen", Usage(input=1000, output=100)) == 0.0
 
 
+def test_is_known_flags_unpriced_models():
+    """`is_known` is the signal `doctor`'s pricing-coverage check relies on to
+    tell "genuinely free" apart from "we don't have a price for this" — a
+    real usage audit found real models (a heavy one being used by this exact
+    session, in fact) silently priced at $0 with nothing anywhere flagging
+    it. This just pins the contract that check depends on."""
+    assert lookup("claude-sonnet-4-5").input > 0
+    from agentlens.pricing import is_known
+
+    assert is_known("claude-sonnet-4-5") is True
+    assert is_known("some-model-we-have-never-seen") is False
+    assert is_known(None) is False
+
+
+# --- store: pricing coverage -----------------------------------------------
+
+
+def test_model_token_totals_surfaces_unpriced_heavy_usage(tmp_path):
+    """The exact real-world case doctor's pricing-coverage check exists to
+    catch: a model with real, substantial usage that the pricing table has
+    never heard of. Its tokens must still be visible via
+    `model_token_totals()` even though its cost rounds to $0 — otherwise the
+    gap is invisible from every angle, not just the dollar figure."""
+    from agentlens.pricing import is_known
+    from agentlens.schema import Event, Provider, Role, Usage as USchema
+
+    db = tmp_path / "t.db"
+    with Store(db) as s:
+        known_usage = USchema(input=1000, output=200)
+        unknown_usage = USchema(input=500_000, output=50_000)
+        events = [
+            Event(
+                session_id="s1", provider=Provider.CLAUDE_CODE, seq=1,
+                ts="2026-01-01T00:00:00", role=Role.ASSISTANT,
+                model="claude-sonnet-4-5", usage=known_usage,
+                cost_usd=cost_of("claude-sonnet-4-5", known_usage),
+            ),
+            Event(
+                session_id="s1", provider=Provider.CLAUDE_CODE, seq=2,
+                ts="2026-01-01T00:00:01", role=Role.ASSISTANT,
+                model="claude-sonnet-9", usage=unknown_usage,
+                cost_usd=cost_of("claude-sonnet-9", unknown_usage),
+            ),
+        ]
+        s.add_events(events)
+        totals = s.model_token_totals()
+
+    assert totals["claude-sonnet-9"] == 550_000
+    assert not is_known("claude-sonnet-9"), "fixture assumes this model has no price yet"
+    # The point of the whole check: real, non-trivial usage on a model whose
+    # cost is silently $0 everywhere else in the report.
+    assert totals["claude-sonnet-9"] > 0
+
+
 # --- prompt lab -----------------------------------------------------------
 
 def test_scorer_discriminates_good_from_bad():

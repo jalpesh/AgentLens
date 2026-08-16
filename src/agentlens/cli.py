@@ -140,7 +140,78 @@ def cmd_doctor(args) -> int:
             "[bold]python fixtures/generate.py --demo ~/agentlens-demo[/bold] "
             "to generate a synthetic dataset and see what AgentLens does."
         )
+
+    _print_pricing_coverage(args)
     return 0
+
+
+def _print_pricing_coverage(args) -> None:
+    """Flag models with real usage but no price, and providers whose ingested
+    events carry zero usable token data.
+
+    Both fail the same way: silently. An unrecognised model prices at $0 (see
+    `pricing.PRICES` / `pricing.lookup`) with no signal anywhere that pricing
+    was actually missing rather than the usage genuinely being free — and an
+    adapter that can't find token fields in the on-disk schema it's reading
+    also returns 0 with no error, because "found nothing" and "found nothing
+    billable" are indistinguishable from inside a single event. Both quietly
+    undercount total spend. Read-only: skipped entirely if `ingest` has never
+    been run, so `doctor` never creates a database as a side effect.
+    """
+    db_path = Path(args.db) if args.db else default_db_path()
+    if not db_path.exists():
+        return
+    from .pricing import is_known
+    from .store import Store
+
+    with Store(db_path) as store:
+        totals = store.model_token_totals()
+        provider_rows = store.conn.execute(
+            "SELECT provider, COUNT(*) n, "
+            "SUM(tok_input + tok_output + tok_cache_read + tok_cache_write) toks, "
+            "SUM(cost_usd) cost FROM events GROUP BY provider"
+        ).fetchall()
+
+    unpriced = {m: t for m, t in totals.items() if not is_known(m) and t > 0}
+    zero_usage_providers = [
+        r["provider"] for r in provider_rows
+        if r["n"] > 0 and (r["toks"] or 0) == 0 and (r["cost"] or 0) == 0
+    ]
+
+    if not unpriced and not zero_usage_providers:
+        return
+
+    console.print("\n[yellow]Pricing / usage coverage:[/yellow]")
+
+    if unpriced:
+        total_toks = sum(totals.values()) or 1
+        for model, toks in sorted(unpriced.items(), key=lambda kv: -kv[1]):
+            share = 100.0 * toks / total_toks
+            console.print(
+                f"  [yellow]{model}[/yellow]: {toks:,} tokens ({share:.1f}% of all "
+                "tokens ingested), priced at $0 — not in the built-in pricing table, "
+                "so none of its cost is counted anywhere in this report."
+            )
+        console.print(
+            "  [dim]Add real prices for these in a JSON file at "
+            "~/.agentlens/pricing.json (or $AGENTLENS_PRICING_FILE) — keys are "
+            "model names, values are {\"input\":, \"output\":, \"cache_read\":, "
+            "\"cache_write\":} in USD per 1M tokens. Picked up automatically, "
+            "no restart needed.[/dim]"
+        )
+
+    if zero_usage_providers:
+        for p in zero_usage_providers:
+            console.print(
+                f"  [yellow]{p}[/yellow]: sessions ingested, but zero token/cost data "
+                "extracted from any of them — this provider's usage is invisible to "
+                "every dollar figure and finding in the report, not just undercounted."
+            )
+        console.print(
+            "  [dim]Expected for a provider whose adapter is ⚠ experimental if its "
+            "on-disk format doesn't match what the adapter expects. Not a sign "
+            "anything crashed — the adapter degrades to zero rather than raising.[/dim]"
+        )
 
 
 def cmd_ingest(args) -> int:
@@ -660,6 +731,7 @@ def build_parser() -> argparse.ArgumentParser:
         return sp
 
     d = sub.add_parser("doctor", help="show which agents are installed")
+    d.add_argument("--db", default=None, help="database path")
     d.set_defaults(func=cmd_doctor)
 
     i = common(sub.add_parser("ingest", help="parse local agent history"))

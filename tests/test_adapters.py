@@ -222,6 +222,48 @@ def test_gemini_cli_marked_experimental():
     assert GeminiCliAdapter().schema_version.endswith("-experimental")
 
 
+def test_gemini_cli_skips_records_with_no_recognized_role(tmp_path):
+    """Real-usage regression, 2026-08-16: `~/.gemini` isn't exclusive to
+    Gemini CLI — Google Antigravity also stores data there (tool-schema
+    manifests, artifact/task metadata), none of which carry a `role` field.
+    A real user's history had files like these fabricated into fake "Gemini
+    CLI sessions" (`Role.USER`, text pulled from whatever content/text/parts
+    field happened to exist) even though none of it was ever a conversation
+    turn or ever carried usage data. The fix must skip any record with no
+    recognized role outright, regardless of what other fields it happens to
+    carry, rather than guessing a role whenever text is present."""
+    import json as _json
+
+    chat_dir = tmp_path / "tmp" / "proj-hash-1" / "chats"
+    chat_dir.mkdir(parents=True, exist_ok=True)
+    p = chat_dir / "not_a_chat.json"
+    p.write_text(_json.dumps([
+        # A tool-schema manifest — no role field, no text-shaped field either.
+        {"name": "cross_repo_search_tool", "description": "Search across repos",
+         "parameters": {"type": "object"}},
+        # No role field, but DOES have a field the parser actually reads
+        # (`content`) — this is the shape that would previously have been
+        # fabricated into a fake Role.USER "prompt".
+        {"artifactType": "task", "content": "Task finished with result: done",
+         "updatedAt": "2026-08-11T14:00:00Z"},
+    ]))
+    events = list(GeminiCliAdapter().parse(SourceFile.of(p)))
+    assert events == [], (
+        "records with no recognized role must be skipped entirely, not "
+        "turned into a fabricated Role.USER session"
+    )
+
+
+def test_gemini_cli_still_parses_real_conversation_turns(tmp_path):
+    """The fix must not be so aggressive it breaks genuine Gemini CLI logs —
+    same fixture shape as `test_gemini_cli_parses_array_of_turns`, just
+    guarding the negative-case fix above didn't overcorrect."""
+    paths = build_gemini(tmp_path)
+    events = list(GeminiCliAdapter().parse(SourceFile.of(paths[0])))
+    assert any(e.role is Role.USER for e in events)
+    assert any(e.role is Role.ASSISTANT for e in events)
+
+
 def test_copilot_cli_introspects_unknown_sqlite_schema(tmp_path):
     """No public schema exists for session-store.db, so this adapter has to
     find its own columns. The test's synthetic db uses different column names
