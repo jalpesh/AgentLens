@@ -12,12 +12,13 @@ safe and never double-counts.
 
 from __future__ import annotations
 
+import hashlib
 import os
 import sqlite3
 from pathlib import Path
 from typing import Iterable, Iterator
 
-from .schema import Event, Provider, Role, Session, ToolKind, Usage
+from .schema import Event, Provider, Role, Session, ToolKind, Usage, hash_repo
 
 SCHEMA_VERSION = 2
 
@@ -69,6 +70,21 @@ CREATE TABLE IF NOT EXISTS sources (
 CREATE TABLE IF NOT EXISTS meta (
     key   TEXT PRIMARY KEY,
     value TEXT
+);
+
+-- One row per dismissed piece of evidence. `dismiss_id` is a content hash of
+-- (detector, session_id, ts) rather than an autoincrement id, so dismissing
+-- the same evidence twice (the dashboard re-POSTing after a reload, two
+-- browser tabs) is idempotent instead of piling up duplicate rows — the same
+-- discipline `Event.event_id` uses for ingest. `reason` is optional and only
+-- ever what the person typed; nothing here is inferred.
+CREATE TABLE IF NOT EXISTS dismissed (
+    dismiss_id   TEXT PRIMARY KEY,
+    detector     TEXT NOT NULL,
+    session_id   TEXT NOT NULL,
+    ts           TEXT NOT NULL,
+    reason       TEXT,
+    dismissed_at TEXT
 );
 """
 
@@ -414,6 +430,111 @@ class Store:
                 "WHERE model IS NOT NULL GROUP BY model"
             ).fetchall()
         }
+
+    # --- dismissed findings ----------------------------------------------
+
+    @staticmethod
+    def dismiss_key(detector: str, session_id: str, ts: str) -> str:
+        """Same key shape a finding's evidence is already addressable by —
+        `(detector, session_id, ts)` — hashed so it's a stable, opaque
+        primary key rather than a composite one three call sites have to
+        keep reconstructing identically."""
+        basis = "|".join((detector, session_id, ts))
+        return hashlib.sha256(basis.encode("utf-8")).hexdigest()[:32]
+
+    def dismiss_evidence(
+        self, detector: str, session_id: str, ts: str, reason: str | None = None
+    ) -> str:
+        did = self.dismiss_key(detector, session_id, ts)
+        self.conn.execute(
+            "INSERT OR REPLACE INTO dismissed "
+            "(dismiss_id, detector, session_id, ts, reason, dismissed_at) "
+            "VALUES (?,?,?,?,?,datetime('now'))",
+            (did, detector, session_id, ts, reason or None),
+        )
+        self.conn.commit()
+        return did
+
+    def dismissed_keys(self) -> set[tuple[str, str, str]]:
+        """Every dismissed `(detector, session_id, ts)` triple — checked
+        against each finding's evidence at payload-build time so a dismissal
+        made today keeps applying to every future re-analysis, not just the
+        page it was clicked on."""
+        return {
+            (r["detector"], r["session_id"], r["ts"])
+            for r in self.conn.execute(
+                "SELECT detector, session_id, ts FROM dismissed"
+            ).fetchall()
+        }
+
+    def dismissed_count(self) -> int:
+        row = self.conn.execute("SELECT COUNT(*) n FROM dismissed").fetchone()
+        return row["n"]
+
+    # --- manual sessions ---------------------------------------------------
+
+    def add_manual_session(
+        self,
+        session_id: str,
+        ts: str,
+        label: str,
+        model: str | None,
+        usage: Usage,
+        cost_usd: float,
+    ) -> None:
+        """Write one synthetic aggregate event for a session AgentLens has no
+        adapter for. Deliberately a single event with no `text` and no tool
+        calls: every detector reasons over prompts, tool sequences and
+        repeated failures, none of which exist here, so a bare usage/cost
+        event is structurally incapable of tripping one — no per-detector
+        skip logic needed, the shape of the data does the work. See
+        `web/server.py`'s manual-session endpoint for the write path and
+        `Provider.MANUAL`'s docstring for why this is kept distinct
+        everywhere it's displayed."""
+        event = Event(
+            session_id=session_id,
+            provider=Provider.MANUAL,
+            seq=1,
+            ts=ts,
+            role=Role.ASSISTANT,
+            model=model,
+            usage=usage,
+            cost_usd=cost_usd,
+            repo_label=label or None,
+            repo_id=hash_repo(label) if label else None,
+            raw_id="manual",
+        )
+        self.add_events([event])
+
+    def manual_sessions(self) -> list[dict]:
+        rows = self.conn.execute(
+            "SELECT session_id, MIN(ts) AS ts, COALESCE(MAX(repo_label), '') AS label, "
+            "MAX(model) AS model, COALESCE(SUM(cost_usd), 0) AS cost_usd "
+            "FROM events WHERE provider = ? GROUP BY session_id ORDER BY ts DESC",
+            (Provider.MANUAL.value,),
+        ).fetchall()
+        return [
+            {
+                "session_id": r["session_id"],
+                "ts": r["ts"] or "",
+                "label": r["label"] or "",
+                "model": r["model"],
+                "cost_usd": round(r["cost_usd"] or 0.0, 6),
+            }
+            for r in rows
+        ]
+
+    def remove_manual_session(self, session_id: str) -> int:
+        """Delete a manually-entered session. Scoped to `provider = 'manual'`
+        on purpose — this is the only place AgentLens deletes ingested data,
+        and restricting it to synthetic sessions means a typo'd session id
+        can never delete real history pulled from an agent's own files."""
+        cur = self.conn.execute(
+            "DELETE FROM events WHERE session_id = ? AND provider = ?",
+            (session_id, Provider.MANUAL.value),
+        )
+        self.conn.commit()
+        return cur.rowcount if cur.rowcount and cur.rowcount > 0 else 0
 
 
 def _row_to_event(r: sqlite3.Row) -> Event:

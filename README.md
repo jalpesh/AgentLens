@@ -283,10 +283,36 @@ no canonical implementation — was left out rather than guessed at; see
 ![Agents and Skills](assets/screenshots/skills.png)
 
 > **The dashboard never writes to your filesystem.** It previews, downloads, and
-> copies the CLI command. There is exactly one POST endpoint in the whole server
-> (`/api/lab`, the prompt scorer) and no file-write endpoint at any flag or
-> setting — a browser-reachable arbitrary-write endpoint isn't something a
-> privacy-positioned tool should ship to save a copy-paste.
+> copies the CLI command for everything above. It does have three POST
+> endpoints — `/api/lab` (the prompt scorer), `/api/dismiss` (mark a finding's
+> evidence as "not waste," see below) and `/api/manual-session` (add a
+> session-level entry for a tool AgentLens can't read history from yet) — and
+> the latter two *do* write, but only to your own local `~/.agentlens/agentlens.db`
+> on `127.0.0.1`, never to a file on disk and never off the machine. No
+> endpoint at any flag or setting writes into your actual agent-history files
+> or anywhere outside that one local database.
+
+**Dismiss a finding.** Every piece of evidence on the Waste tab has a "Not
+waste? Dismiss →" button — for the case where a detector is technically right
+about the pattern but wrong about it being a problem (a loop you deliberately
+scripted, a churn pattern that's just how a file gets built). Dismissing
+records an optional reason locally and filters that evidence out of every
+future report; a finding whose evidence is entirely dismissed stops
+appearing at all. A small note above the findings list always says how many
+pieces of evidence are currently dismissed, so it's visible, never a silent
+black hole. There's no undo button by design — dismissing is meant to be
+occasional, not a toggle.
+
+**Add a session.** The Sessions tab has an "Add a session" form for tools
+AgentLens doesn't have an adapter for yet. It only accepts session-level
+aggregates (date, project/tool label, model, token counts, an optional cost
+override) — there's no real turn-by-turn data behind a manually-typed entry,
+so it's counted in totals and charts but can never produce a detector
+finding, and it's always labeled `manual` everywhere it shows up so it's
+never mistaken for something AgentLens actually parsed. Manually-added
+sessions can only be removed from a terminal: `agentlens sessions --remove
+<session_id>` — scoped so it can only ever delete a manual entry, never real
+ingested history.
 
 ## What it detects
 
@@ -446,7 +472,7 @@ individual adapters at a demo directory), do it by hand instead:
 ```bash
 pip install -e ".[dev]"
 python fixtures/generate.py --demo ~/agentlens-demo   # synthetic history, all 7 agents
-pytest -q                                              # 144 tests
+pytest -q                                              # 164 tests
 
 # fixtures/generate.py prints the exact export lines for your shell; e.g.:
 export CLAUDE_CONFIG_DIR=~/agentlens-demo/.claude

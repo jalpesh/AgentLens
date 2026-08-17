@@ -221,6 +221,24 @@
             color:var(--text-muted);border-radius:6px;padding:4px 9px;
             font-size:11.5px;cursor:pointer;font-family:inherit}
   .cite-btn:hover{border-color:var(--series-1);color:var(--series-1)}
+  .dismiss-btn{margin-top:8px;margin-left:8px;background:none;border:1px solid var(--line);
+            color:var(--text-muted);border-radius:6px;padding:4px 9px;
+            font-size:11.5px;cursor:pointer;font-family:inherit}
+  .dismiss-btn:hover{border-color:var(--critical);color:var(--critical)}
+  .dismissed-note{font-size:12px;color:var(--text-muted);margin:-4px 0 12px}
+  .add-session-form{background:var(--surface-1);border:1px solid var(--line);
+            border-radius:var(--radius);padding:16px 18px;margin-bottom:16px}
+  .add-session-form .row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
+  .add-session-form label{display:flex;flex-direction:column;gap:5px;font-size:11px;
+            letter-spacing:.07em;text-transform:uppercase;color:var(--text-muted);
+            font-weight:600}
+  .add-session-form input{background:var(--surface-0);color:var(--text-primary);
+            border:1px solid var(--line);border-radius:7px;padding:6px 9px;
+            font-family:inherit;font-size:13px;width:150px}
+  .add-session-form .msg{font-size:12px;margin-top:8px}
+  .manual-badge{font-size:10px;letter-spacing:.06em;text-transform:uppercase;
+            font-weight:700;color:var(--text-muted);border:1px solid var(--text-muted);
+            border-radius:4px;padding:0 5px;margin-left:6px}
   .cite-box{margin-top:9px;background:var(--surface-0);border:1px solid var(--line);
             border-radius:7px;padding:10px 12px;display:none}
   .cite-box.on{display:block}
@@ -290,6 +308,7 @@
   <section class="panel on" id="p-waste">
     <div class="tiles" id="waste-tiles"></div>
     <h2>Habits you repeat — ranked by what they cost you</h2>
+    <div id="waste-dismissed"></div>
     <div id="findings"></div>
   </section>
 
@@ -314,6 +333,7 @@
 
   <!-- ==================== SESSIONS =================================== -->
   <section class="panel" id="p-sessions">
+    <div id="add-session-wrap"></div>
     <div class="card"><h2>Sessions by cost</h2>
       <p class="pb-sub" style="margin:-4px 0 10px">Click a session to open its
         turn-by-turn drill-down.</p>
@@ -628,6 +648,10 @@ function findingCardHTML(f, i){
             <button class="cite-btn" data-path="${esc(e.target_path)}">
               Cite the file →</button>
             <div class="cite-box"></div>` : ''}
+          ${!AGENTLENS_STATIC_DATA ? `
+            <button class="dismiss-btn" data-detector="${esc(f.detector)}"
+              data-session="${esc(e.session_id)}" data-ts="${esc(e.ts)}">
+              Not waste? Dismiss →</button>` : ''}
         </div>`).join('')}
       ${(f.attempts && f.attempts.length > 1) ? attemptsTable(f.attempts) : ''}
     </article>`;
@@ -641,6 +665,28 @@ function findingCardHTML(f, i){
 function wireFindingCards(d){
   document.querySelectorAll('.cite-btn').forEach(btn => {
     btn.onclick = () => loadCitation(btn);
+  });
+
+  // "Not waste? Dismiss" — persists to the local db (`Store.dismiss_evidence`)
+  // so it keeps applying to future re-analysis, not just this page view.
+  // Add-only, same as the manual-import endpoint: no undo button here, by
+  // design (see `_apply_dismissals`'s docstring) — a mistaken dismissal is
+  // rare enough that a CLI-visible record beats a UI that invites casually
+  // toggling findings on and off.
+  document.querySelectorAll('.dismiss-btn').forEach(btn => {
+    btn.onclick = () => {
+      const reason = prompt('Why isn\'t this waste? (optional)') || '';
+      btn.disabled = true; btn.textContent = 'Dismissing…';
+      fetch('/api/dismiss', {method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({
+          detector: btn.dataset.detector, session_id: btn.dataset.session,
+          ts: btn.dataset.ts, reason,
+        })})
+        .then(r => r.json())
+        .then(r => { if(r.error) throw new Error(r.error); reload(); })
+        .catch(e => { btn.disabled = false; btn.textContent = 'Failed — retry →';
+          console.error(e); });
+    };
   });
 
   // Round-trip: load the FULL prompt (not the ellipsised quote) into the Lab
@@ -672,6 +718,14 @@ function renderWaste(d){
       <div class="s">each with your own prompts as evidence</div></div>
     <div class="tile"><div class="k">Served from cache</div><div class="v">${t.cache_hit_pct}%</div>
       <div class="s">${num(t.cache_read)} cached input tokens</div></div>`;
+
+  // Dismissals are a filter applied before this payload was built (see
+  // `_apply_dismissals`) — this is just visibility that they're happening,
+  // so dismissing never reads as evidence quietly vanishing.
+  const dc = d.dismissed_count || 0;
+  $('#waste-dismissed').innerHTML = dc
+    ? `<p class="dismissed-note">${dc} piece(s) of evidence dismissed as "not waste" and `
+      + `excluded from the findings below.</p>` : '';
 
   if(!d.findings.length){
     $('#findings').innerHTML = '<div class="empty">No recurring waste patterns found. '
@@ -723,18 +777,81 @@ function renderSessions(d){
   const rows = d.sessions.slice(0,60);
   $('#tbl-sessions').innerHTML = table([
     {t:'Started', f:r => esc((r.started_at||'').slice(0,16).replace('T',' '))},
-    {t:'Agent', f:r => esc(r.provider)},
+    {t:'Agent', f:r => esc(r.provider) + (r.provider === 'manual'
+      ? '<span class="manual-badge">manual</span>' : '')},
     {t:'Title', f:r => esc((r.title||'').slice(0,64))},
     {t:'Tokens', n:1, f:r => num(r.tokens)},
     {t:'Peak ctx', n:1, f:r => r.peak_context_pct.toFixed(0) + '%'},
     {t:'Cost', n:1, f:r => money(r.cost_usd)},
   ], rows);
   $('#session-detail').innerHTML = '';
+  renderAddSessionForm();
   if(AGENTLENS_STATIC_DATA) return; // no server to drill into in a static export
   $('#tbl-sessions').querySelectorAll('tbody tr').forEach((tr, i) => {
     tr.classList.add('sess-row');
     tr.onclick = () => openSessionDetail(rows[i].session_id);
   });
+}
+
+/* ---------- manual session entry ----------
+   The dashboard's second write endpoint (the first is /api/dismiss) — see
+   `Store.add_manual_session`. Session-level aggregate only: there is no real
+   turn-by-turn data to enter for a tool AgentLens has no adapter for, so this
+   form doesn't pretend otherwise. Add-only; removal is
+   `agentlens sessions --remove <id>` from a terminal, not a button here. */
+function renderAddSessionForm(){
+  const wrap = $('#add-session-wrap');
+  if(!wrap) return;
+  if(AGENTLENS_STATIC_DATA){
+    wrap.innerHTML = ''; // no server to write to in a static export
+    return;
+  }
+  wrap.innerHTML = `
+    <div class="add-session-form">
+      <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:10px">
+        <h2 style="margin:0">Add a session <span class="manual-badge">manual</span></h2>
+      </div>
+      <p class="pb-sub" style="margin:0 0 12px">For a tool AgentLens can't read history from
+        yet — counted in totals and charts, but it never produces a finding: there's no
+        turn-by-turn data here for a pattern to hide in.</p>
+      <div class="row">
+        <label>Date<input type="date" id="as-date"></label>
+        <label>Project / tool<input type="text" id="as-label" placeholder="e.g. cursor-frontend"></label>
+        <label>Model (optional)<input type="text" id="as-model" placeholder="e.g. gpt-5.1"></label>
+        <label>Input tokens<input type="number" id="as-tin" min="0" value="0"></label>
+        <label>Output tokens<input type="number" id="as-tout" min="0" value="0"></label>
+        <label>Cost $ (optional override)<input type="number" id="as-cost" min="0" step="0.0001"></label>
+        <button id="as-submit" class="pb-btn pb-btn-primary">Add session</button>
+      </div>
+      <div class="msg" id="as-msg"></div>
+    </div>`;
+  $('#as-submit').onclick = () => {
+    const label = $('#as-label').value.trim();
+    if(!label){ $('#as-msg').innerHTML =
+      '<span style="color:var(--critical)">Project / tool is required.</span>'; return; }
+    const body = {
+      date: $('#as-date').value || null,
+      label,
+      model: $('#as-model').value.trim() || null,
+      tokens_input: +$('#as-tin').value || 0,
+      tokens_output: +$('#as-tout').value || 0,
+      cost_usd: $('#as-cost').value === '' ? null : +$('#as-cost').value,
+    };
+    $('#as-submit').disabled = true;
+    $('#as-msg').textContent = 'Adding…';
+    fetch('/api/manual-session', {method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(body)})
+      .then(r => r.json())
+      .then(r => {
+        if(r.error) throw new Error(r.error);
+        $('#as-msg').innerHTML = `<span style="color:var(--good)">Added — ${money(r.cost_usd)}.</span>`;
+        reload();
+      })
+      .catch(e => {
+        $('#as-submit').disabled = false;
+        $('#as-msg').innerHTML = `<span style="color:var(--critical)">${esc(e.message)}</span>`;
+      });
+  };
 }
 
 /* ---------- session drill-down (section A) ---------- */

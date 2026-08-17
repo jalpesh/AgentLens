@@ -87,6 +87,25 @@ a file named by a request parameter:
 grep -n "def _citation" src/agentlens/web/server.py
 ```
 
+## The two endpoints that write — both local-only, both add-only
+
+Every other endpoint is read-only. These two write to
+`~/.agentlens/agentlens.db` and nowhere else — never to a file on disk,
+never off the machine, never reachable except from `127.0.0.1` by default.
+
+| | `/api/dismiss` | `/api/manual-session` |
+|---|---|---|
+| Where | Waste tab, "Not waste? Dismiss →" on a piece of evidence | Sessions tab, "Add a session" form |
+| Writes | One row to a `dismissed` table: `(detector, session_id, ts, reason)` | One synthetic aggregate event tagged `provider = "manual"` |
+| Never | Touches your agent history files, or evidence/sessions it wasn't explicitly pointed at | Contains turn-by-turn data — it's a total, not a transcript, so it can't produce a detector finding |
+| Undo | None in the UI — dismissals are meant to be occasional, not toggled | `agentlens sessions --remove <id>`, scoped to `provider = "manual"` rows only, so it can never delete real ingested history even if pointed at the wrong id |
+
+Verify the scope yourself:
+
+```bash
+grep -n "def _dismiss\|def _manual_session" src/agentlens/web/server.py
+```
+
 ## What it stores
 
 A local SQLite database at `~/.agentlens/agentlens.db` (override with
