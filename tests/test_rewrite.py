@@ -60,6 +60,78 @@ def test_scaffold_is_honest_about_what_it_could_not_fill():
     assert not s.filled
 
 
+# --- multi_ask: split into separate turns, don't relabel the blob ----------
+#
+# Found from a real report: a three-paragraph, three-topic prompt correctly
+# got flagged "Several tasks bundled (3 asks)" by score_prompt, and then
+# scaffold()'s "fix" for that diagnosis was nothing — it glued `In @<FILE>, `
+# onto the entire unmodified three-paragraph blob and called it a rewrite.
+# These pin the actual fix: paragraph-separated multi_ask prompts come back
+# as separate, individually sendable turns.
+
+
+def test_multi_ask_with_paragraph_breaks_splits_into_separate_turns():
+    prompt = (
+        "Fix the login bug where sessions expire early.\n\n"
+        "Also add a dark mode toggle to settings.\n\n"
+        "Also update the README to mention the new toggle."
+    )
+    s = scaffold(prompt, [], None, ["multi_ask"])
+    assert s.text.startswith("Send these as separate turns, not one prompt:")
+    assert "1. In @<FILE>, Fix the login bug where sessions expire early." in s.text
+    assert "2. In @<FILE>, Also add a dark mode toggle to settings." in s.text
+    assert "3. In @<FILE>, Also update the README" in s.text
+    # One shared placeholder note, not one per repeated occurrence in the text.
+    assert s.placeholders == ["<FILE>"]
+
+
+def test_multi_ask_reuses_a_real_file_hint_across_every_turn(sessions):
+    prompt = "Fix the failing check.\n\nAlso clean up the imports."
+    s = scaffold(prompt, sessions[LOOPING], None, ["multi_ask"])
+    assert s.text.count("verify.py") == 2
+    assert "<FILE>" not in s.text
+    assert s.filled.get("file", "").endswith("verify.py")
+
+
+def test_multi_ask_without_paragraph_breaks_falls_back_to_single_intent():
+    """A run-on sentence with "also"/"and then" connectors but no blank
+    lines has no safe place to cut — splitting mid-sentence would be a
+    worse guess than not splitting at all, so this must fall through to
+    the ordinary single-intent scaffold rather than mis-splitting."""
+    prompt = "Fix the bug and then also update the docs and also run the tests"
+    s = scaffold(prompt, [], None, ["multi_ask"])
+    assert "Send these as separate turns" not in s.text
+    assert s.text.startswith("In @<FILE>, Fix the bug")
+
+
+def test_multi_ask_real_report_reproduction():
+    """The exact input that surfaced this bug — three topics, one per
+    paragraph, no session context. Before the fix this returned the whole
+    unmodified prompt with `In @<FILE>, ` glued to the front; it must now
+    come back as three separate, individually sendable turns."""
+    prompt = (
+        "mke sure loading screen is shown when hugh amount of data is being "
+        "loaded on some machines . Give a date time filter.\n\n"
+        "One thing which I want to add is subagents and sub agent auto drive "
+        "skills. Not all systems have automatic model routing, for those I "
+        "want sub agent workers who automatically use cheaper models. This "
+        "should be an automatically available skill and also allow users to "
+        "download from the dashboard.\n\n"
+        "Also for the current project, check which skills are missing and "
+        "add those right now. Additionally, write to the files so it's in "
+        "use ahead of time."
+    )
+    from agentlens.analytics.prompt_score import score_prompt
+
+    r = score_prompt(prompt)
+    assert "multi_ask" in {i.code for i in r.issues}
+    s = scaffold(prompt, [], None, [i.code for i in r.issues])
+    assert s.text.startswith("Send these as separate turns, not one prompt:")
+    assert "1. In @<FILE>, mke sure loading screen" in s.text
+    assert "2. In @<FILE>, One thing which I want to add" in s.text
+    assert "3. In @<FILE>, Also for the current project" in s.text
+
+
 def test_scaffold_preserves_user_intent(sessions):
     """The rewrite adds specifics; it must not paraphrase away what was asked."""
     s = scaffold("reject expired tokens", sessions[LOOPING], None, [])
