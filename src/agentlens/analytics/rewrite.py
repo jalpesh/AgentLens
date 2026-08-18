@@ -120,6 +120,34 @@ def scaffold(
     test_hint = detect_test_command(events)
     error_hint = _nearest_error(events, seq)
 
+    # "Several tasks bundled" (multi_ask) diagnoses the prompt as several
+    # asks jammed into one turn — the fix for that is to send them as
+    # separate turns, not to relabel the same blob. Found from a real
+    # report: a three-paragraph, three-topic prompt came back from this
+    # function as `In @<FILE>, ` glued onto the *entire* unmodified prompt —
+    # multi_ask was correctly flagged and then completely ignored by the
+    # rewrite. When the prompt already has blank-line-separated paragraphs
+    # (a strong, safe signal — no sentence-boundary guessing required),
+    # split on those and hand back one numbered turn per paragraph instead.
+    # A single run-on paragraph with "also"/"and then" connectors but no
+    # blank lines falls through to the single-intent path below, because
+    # there's no safe place to cut it without guessing.
+    if "multi_ask" in issues:
+        paragraphs = [p.strip() for p in re.split(r"\n\s*\n", prompt or "") if p.strip()]
+        if len(paragraphs) > 1:
+            if file_hint:
+                filled["file"] = file_hint
+                file_token = f"@{file_hint}"
+            else:
+                placeholders.append("<FILE>")
+                file_token = "@<FILE>"
+            turns = [
+                f"{i}. In {file_token}, {' '.join(p.split())}"
+                for i, p in enumerate(paragraphs, 1)
+            ]
+            text = "Send these as separate turns, not one prompt:\n\n" + "\n\n".join(turns)
+            return Scaffold(text=text, filled=filled, placeholders=placeholders)
+
     # Keep the user's own words as the intent line — the rewrite is about
     # adding the missing specifics, not about paraphrasing what they meant.
     intent = " ".join((prompt or "").split()) or "<what should change>"
