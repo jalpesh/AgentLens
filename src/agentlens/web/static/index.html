@@ -339,6 +339,13 @@
       <div class="card"><h2>By agent</h2><div id="tbl-provider"></div></div>
       <div class="card"><h2>Tool mix</h2><div id="tbl-tools"></div></div>
     </div>
+    <div class="card" id="task-econ-card" style="margin-top:14px">
+      <h2>Task Economics — cost per piece of finished work</h2>
+      <p class="dq-lead" id="te-lead"></p>
+      <div id="tbl-te"></div>
+      <details style="margin-top:10px"><summary>Tasks (most expensive first)</summary>
+        <div id="tbl-tasks"></div></details>
+    </div>
     <div class="card" id="data-quality-card" style="margin-top:14px">
       <h2>Data quality — what each number is worth</h2>
       <p class="dq-lead" id="dq-lead"></p>
@@ -787,6 +794,7 @@ function renderOverview(d){
     {t:'Output', n:1, f:r => (r.output_bytes/1024).toFixed(0) + ' KB'},
   ], d.tool_mix);
 
+  renderTaskEconomics(d);
   renderDataQuality(d);
 }
 
@@ -812,20 +820,47 @@ function renderDataQuality(d){
       + `${(s.none||0)} unavailable. A measured number and an estimate are never `
       + `shown as the same thing.`;
   }
+  el.innerHTML = measureTable(ms);
+}
+function measureTable(ms){
   const fmtVal = m => {
-    if(m.value === null || m.source === 'unavailable') return '<span class="dq-basis">no data</span>';
+    if(m.value === null || m.source === 'unavailable') return '<span class="dq-basis">Insufficient data</span>';
     if(m.unit === 'usd') return money(m.value);
     if(m.unit === 'pct') return (+m.value) + '%';
     if(m.unit === 'tokens' || m.unit === 'count') return num(m.value);
     return esc(String(m.value));
   };
-  el.innerHTML = table([
+  return table([
     {t:'Metric', f:m => `<b>${esc(m.label)}</b><div class="dq-method">${esc(m.method)}</div>`},
     {t:'Value', n:1, f:fmtVal},
     {t:'Basis', f:m => `<span class="dq-basis">${esc(_DQ_SOURCE[m.source] || m.source)}</span>`},
     {t:'Confidence', n:1, f:m => `<span class="conf conf-${esc(m.confidence)}">`
-      + `${m.confidence === 'none' ? '—' : esc(m.confidence)}</span>`},
+      + `${m.confidence === 'none' ? '—' : esc(m.confidence)}</span>`
+      + (m.sample_size != null ? `<div class="dq-method">n=${num(m.sample_size)}</div>` : '')},
   ], ms);
+}
+function renderTaskEconomics(d){
+  const te = d.task_economics || {};
+  const el = $('#tbl-te');
+  if(!el) return;
+  const ms = te.measures || [];
+  if(!ms.length){ el.innerHTML = '<div class="empty">No data in this scope.</div>'; return; }
+  const o = te.by_outcome || {};
+  $('#te-lead').textContent =
+    `Tasks are inferred from sessions (same agent + repo + branch, resumed within 30 min). `
+    + `Outcomes: ${o.validated||0} validated · ${o.unvalidated||0} changed code without a test result · `
+    + `${o.failing||0} ended on a failing test · ${o.no_change||0} read-only · `
+    + `${o.unknown||0} unknown (agent history has no tool events).`;
+  el.innerHTML = measureTable(ms);
+  $('#tbl-tasks').innerHTML = table([
+    {t:'Started', f:r => esc((r.started_at||'').slice(0,16).replace('T',' '))},
+    {t:'Agent', f:r => esc(r.provider)},
+    {t:'Outcome', f:r => esc(r.outcome)},
+    {t:'Why', f:r => `<span class="dq-method">${esc(r.signals.join('; '))}</span>`},
+    {t:'Prompts', n:1, f:r => num(r.prompts)},
+    {t:'Tokens', n:1, f:r => num(r.tokens)},
+    {t:'Cost', n:1, f:r => money(r.cost_usd)},
+  ], te.tasks || []);
 }
 
 function renderSessions(d){

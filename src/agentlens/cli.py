@@ -782,6 +782,41 @@ def cmd_data_quality(args) -> int:
     return 0
 
 
+def cmd_tasks(args) -> int:
+    """Task Economics: cost and outcome per inferred task, for every agent."""
+    from .analytics.tasks import build_tasks, by_outcome, task_economics
+
+    with _open_store(args) as store:
+        sessions = _scoped_sessions(args, store)
+    if not sessions:
+        console.print("[yellow]No data.[/yellow] Run [bold]agentlens ingest[/bold] first.")
+        return 1
+    tasks = build_tasks(sessions, run_all(sessions))
+    measures = task_economics(tasks)
+    if args.json:
+        print(json.dumps({"measures": [m.to_dict() for m in measures],
+                          "by_outcome": by_outcome(tasks),
+                          "tasks": [t.to_dict() for t in tasks]}, indent=2, default=str))
+        return 0
+    table = Table(title="Task Economics")
+    for col, kw in (("Metric", {}), ("Value", {"justify": "right"}), ("Basis", {}),
+                    ("Confidence", {}), ("n", {"justify": "right"})):
+        table.add_column(col, **kw)
+    for m in measures:
+        conf = m.confidence.value
+        table.add_row(
+            m.label,
+            _fmt_measure_value(m) if m.available else "Insufficient data",
+            _SOURCE_LABEL.get(m.source.value, m.source.value),
+            Text(conf if m.available else "—", style=_CONF_COLOR.get(conf, "white")),
+            "" if m.sample_size is None else str(m.sample_size),
+        )
+    console.print(table)
+    console.print(Text("  Outcomes: " + ", ".join(
+        f"{k} {v}" for k, v in by_outcome(tasks).items()), style="dim"))
+    return 0
+
+
 def cmd_serve(args) -> int:
     from .web.server import serve
 
@@ -888,6 +923,10 @@ def build_parser() -> argparse.ArgumentParser:
     ))
     dq.add_argument("--json", action="store_true", help="machine-readable output")
     dq.set_defaults(func=cmd_data_quality)
+
+    tk = common(sub.add_parser("tasks", help="task economics: cost and outcome per task"))
+    tk.add_argument("--json", action="store_true", help="machine-readable output")
+    tk.set_defaults(func=cmd_tasks)
 
     e = common(sub.add_parser("export", help="export analysis as JSON"))
     e.add_argument("--out", default=None)

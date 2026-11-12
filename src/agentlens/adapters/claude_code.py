@@ -120,7 +120,7 @@ class ClaudeCodeAdapter(Adapter):
                     command = tin.get("command") if isinstance(tin.get("command"), str) else None
                     tid = str(block.get("id") or "")
                     if tid:
-                        pending[tid] = (raw_name, in_bytes, target)
+                        pending[tid] = (raw_name, in_bytes, target, command)
 
                     seq += 1
                     yield Event(
@@ -152,7 +152,7 @@ class ClaudeCodeAdapter(Adapter):
                 if results:
                     for block in results:
                         tid = str(block.get("tool_use_id") or "")
-                        raw_name, in_bytes, target = pending.pop(tid, ("", 0, None))
+                        raw_name, in_bytes, target, command = pending.pop(tid, ("", 0, None, None))
                         out_bytes = self.size_of(block.get("content"))
                         is_err = bool(block.get("is_error"))
                         # Failures only — see ToolInfo.error_text. A successful
@@ -169,7 +169,9 @@ class ClaudeCodeAdapter(Adapter):
                             seq=seq,
                             role=Role.TOOL_RESULT,
                             tool=ToolInfo(
-                                kind=normalize_tool(raw_name),
+                                # The command decides TEST vs BASH, so the
+                                # result must be classified with it too.
+                                kind=normalize_tool(raw_name, command),
                                 raw_name=raw_name,
                                 input_bytes=in_bytes,
                                 output_bytes=out_bytes,
