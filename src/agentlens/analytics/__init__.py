@@ -1,6 +1,13 @@
 from __future__ import annotations
 
 from . import rollups
+from .confidence import (
+    Confidence,
+    Measure,
+    Source,
+    data_quality,
+    summary as data_quality_summary,
+)
 from .detectors import DETECTORS, Finding, run_all, run_session
 from .playbook import CURATED_REFERENCE, Rule, build_playbook, render as render_playbook
 from .prompt_score import (
@@ -18,6 +25,11 @@ from .skills import Artifact, Suggestion, generic_suggestions, suggest
 
 __all__ = [
     "rollups",
+    "Confidence",
+    "Measure",
+    "Source",
+    "data_quality",
+    "data_quality_summary",
     "DETECTORS",
     "Finding",
     "run_all",

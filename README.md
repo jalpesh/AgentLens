@@ -111,6 +111,7 @@ agentlens report --html out.html   # same dashboard, one file, no server — sha
 agentlens projects          # list projects available to --project
 agentlens sessions          # per-session breakdown
 agentlens lab "..."         # score a prompt BEFORE you send it
+agentlens data-quality      # every headline number with its provenance + confidence
 agentlens serve             # live dashboard on http://127.0.0.1:7878
 agentlens export            # redacted JSON for your own analysis
 ```
@@ -333,6 +334,30 @@ ingested history.
 Each is one small file in [`analytics/detectors/`](src/agentlens/analytics/detectors/)
 with its own test. Adding one is a pull request, not a redesign.
 
+## Every number knows what it's worth
+
+A dashboard that renders a measured token count and an extrapolated estimate in
+the same font is lying by omission — and the moment a sceptical reader catches
+one soft number dressed as a fact, they're right to distrust all of them. So
+every headline figure carries its own provenance and confidence, on the
+Overview tab and via `agentlens data-quality`:
+
+| Basis | Meaning | Example |
+|---|---|---|
+| **Measured** (direct) | Read verbatim from the agent's own records | Tokens analysed, cache hit rate |
+| **Calculated** (derived) | Arithmetic over measured values + the pricing table | Total spend, discovery share |
+| **Heuristic** | A tuned behavioural detector — a signal, not a bill | Loop / rework cost |
+| **Assumption** (configured) | Depends on a value you set | Estimated value (needs an hourly rate) |
+| **No data** (unavailable) | Can't be computed here — shown as *unknown*, never as `0` | Time saved with no baseline set |
+
+Confidence (`high` / `medium` / `low`) degrades honestly: **total spend** drops
+to `low` when most of your tokens ran on a model the pricing table doesn't know
+(its real cost is invisible, and the figure says so), and ratios computed over a
+thin sample are tempered down rather than presented as solid. The classifier is
+adapter-agnostic — a token count is *measured* whether it came from Claude Code,
+Codex or Gemini — so it speaks for all supported agents at once. See
+[`analytics/confidence.py`](src/agentlens/analytics/confidence.py).
+
 ## Supported agents
 
 | Agent | Source | Status |
@@ -472,7 +497,7 @@ individual adapters at a demo directory), do it by hand instead:
 ```bash
 pip install -e ".[dev]"
 python fixtures/generate.py --demo ~/agentlens-demo   # synthetic history, all 7 agents
-pytest -q                                              # 164 tests
+pytest -q                                              # 181 tests
 
 # fixtures/generate.py prints the exact export lines for your shell; e.g.:
 export CLAUDE_CONFIG_DIR=~/agentlens-demo/.claude

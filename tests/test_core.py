@@ -14,7 +14,7 @@ from agentlens.adapters.base import SourceFile  # noqa: E402
 from agentlens.analytics.prompt_score import score_prompt  # noqa: E402
 from agentlens.pricing import canonical, cost_of, lookup  # noqa: E402
 from agentlens.redact import redact_obj, redact_text  # noqa: E402
-from agentlens.schema import Usage  # noqa: E402
+from agentlens.schema import Event, Provider, Role, Usage  # noqa: E402
 from agentlens.store import Store  # noqa: E402
 from generate import build  # noqa: E402
 
@@ -122,6 +122,30 @@ def test_scorer_names_what_is_missing():
     assert "no_file_ref" in codes and "no_acceptance" in codes
 
 
+def test_scorer_flags_a_bare_placeholder_file_reference():
+    """Found from a real report: a person's actual prompt read "In @<FILE>,
+    make sure..." — a leftover, unfilled `scaffold()` placeholder (see
+    rewrite.py) copied forward as if it were a real reference. `@<FILE>`
+    itself already fails `_FILE_REF` (angle brackets break the match), but a
+    bare placeholder word like `@FILE` — no extension, no directory
+    separator — matched `_FILE_REF` and was previously treated as a real
+    file reference with no penalty at all. This pins that it no longer is."""
+    r = score_prompt("In @FILE, make sure the loading screen shows for big datasets.")
+    codes = {i.code for i in r.issues}
+    assert "placeholder_file_ref" in codes
+    assert "no_file_ref" not in codes  # a different, more specific issue — not both
+
+
+def test_scorer_does_not_flag_a_real_file_reference_as_a_placeholder():
+    r = score_prompt(
+        "In @src/agentlens/web/server.py, add a loading indicator; "
+        "`pytest -q` must pass."
+    )
+    codes = {i.code for i in r.issues}
+    assert "placeholder_file_ref" not in codes
+    assert "no_file_ref" not in codes
+
+
 def test_cleanup_never_changes_meaning():
     r = score_prompt("Please could you update @src/api.py so it returns 404. Thanks!")
     assert "@src/api.py" in r.cleaned
@@ -190,3 +214,79 @@ def test_store_roundtrips_events(tmp_path):
     assert round(sum(e.cost_usd for e in back), 6) == round(
         sum(e.cost_usd for e in original), 6
     )
+
+
+# --- store: explicit date-range filter (`until`) ----------------------------
+
+
+def _dated_event(session_id: str, ts: str) -> Event:
+    return Event(
+        session_id=session_id, provider=Provider.CLAUDE_CODE, seq=1,
+        ts=ts, role=Role.ASSISTANT, cost_usd=1.0,
+    )
+
+
+def test_until_excludes_events_after_the_given_date(tmp_path):
+    with Store(tmp_path / "t.db") as s:
+        s.add_events([
+            _dated_event("in-range", "2026-01-05T10:00:00"),
+            _dated_event("on-boundary", "2026-01-10T23:59:59"),
+            _dated_event("out-of-range", "2026-01-11T00:00:01"),
+        ])
+        ids = set(s.session_ids(until="2026-01-10"))
+
+    assert "in-range" in ids
+    # `until` is inclusive of the whole day it names, not just midnight —
+    # see `_where`'s comment on why it compares against the *next* day.
+    assert "on-boundary" in ids
+    assert "out-of-range" not in ids
+
+
+def test_since_and_until_combine_as_an_and(tmp_path):
+    with Store(tmp_path / "t.db") as s:
+        s.add_events([
+            _dated_event("too-early", "2026-01-01T00:00:00"),
+            _dated_event("in-range", "2026-01-05T00:00:00"),
+            _dated_event("too-late", "2026-01-20T00:00:00"),
+        ])
+        ids = set(s.session_ids(since="2026-01-03", until="2026-01-10"))
+
+    assert ids == {"in-range"}
+
+
+# --- dashboard: explicit date-range filter through build_payload -----------
+
+
+def test_build_payload_date_range_narrows_totals(tmp_path):
+    from agentlens.web.server import build_payload
+
+    db = tmp_path / "t.db"
+    with Store(db) as s:
+        s.add_events([
+            _dated_event("jan", "2026-01-05T00:00:00"),
+            _dated_event("mar", "2026-03-05T00:00:00"),
+        ])
+
+    everything = build_payload(str(db))
+    assert everything["totals"]["sessions"] == 2
+
+    narrowed = build_payload(str(db), date_from="2026-01-01", date_to="2026-01-31")
+    assert narrowed["totals"]["sessions"] == 1
+    assert narrowed["active_scope"]["date_from"] == "2026-01-01"
+    assert narrowed["active_scope"]["date_to"] == "2026-01-31"
+
+
+def test_build_payload_explicit_range_wins_over_days_preset(tmp_path):
+    """`days` and an explicit range are two ways of expressing the same
+    filter slot in the UI — if a caller somehow sends both, the more
+    specific explicit range must be the one that actually applies."""
+    from agentlens.web.server import build_payload
+
+    db = tmp_path / "t.db"
+    with Store(db) as s:
+        s.add_events([_dated_event("old", "2020-01-01T00:00:00")])
+
+    # `days` alone would exclude a 2020 event; an explicit range that covers
+    # it must still surface it even with a conflicting `days` also present.
+    out = build_payload(str(db), days=7, date_from="2019-01-01", date_to="2021-01-01")
+    assert out["totals"]["sessions"] == 1

@@ -715,6 +715,73 @@ def cmd_export(args) -> int:
     return 0
 
 
+_CONF_COLOR = {"high": "green", "medium": "yellow", "low": "bright_red", "none": "dim"}
+_SOURCE_LABEL = {
+    "direct": "measured",
+    "derived": "calculated",
+    "heuristic": "heuristic",
+    "configured": "assumption",
+    "inferred": "inferred",
+    "unavailable": "no data",
+}
+
+
+def _fmt_measure_value(m) -> str:
+    if not m.available:
+        return "—"
+    if m.unit == "usd":
+        return _money(m.value)
+    if m.unit == "pct":
+        return f"{m.value:g}%"
+    if m.unit in ("tokens", "count"):
+        return f"{int(m.value):,}"
+    return str(m.value)
+
+
+def cmd_data_quality(args) -> int:
+    """Show every headline number with where it came from and how far to trust
+    it. The honesty layer: a measured token count and an unavailable estimate
+    must never look the same."""
+    from .analytics import data_quality, data_quality_summary
+
+    with _open_store(args) as store:
+        sessions = _scoped_sessions(args, store)
+
+    if not sessions:
+        console.print("[yellow]No data.[/yellow] Run [bold]agentlens ingest[/bold] first.")
+        return 1
+
+    findings = run_all(sessions)
+    measures = data_quality(sessions, findings)
+
+    if args.json:
+        print(json.dumps(
+            {"measures": [m.to_dict() for m in measures],
+             "summary": data_quality_summary(measures)},
+            indent=2, default=str,
+        ))
+        return 0
+
+    table = Table(title="Data quality — trust every number for what it is")
+    table.add_column("Metric")
+    table.add_column("Value", justify="right")
+    table.add_column("Basis")
+    table.add_column("Confidence")
+    for m in measures:
+        conf = m.confidence.value
+        table.add_row(
+            m.label,
+            _fmt_measure_value(m),
+            _SOURCE_LABEL.get(m.source.value, m.source.value),
+            Text(conf if m.available else "—", style=_CONF_COLOR.get(conf, "white")),
+        )
+    console.print(table)
+    console.print()
+    for m in measures:
+        console.print(Text(f"  {m.label}: {m.method}", style="dim"))
+    return 0
+
+
 def cmd_serve(args) -> int:
     from .web.server import serve
 
@@ -814,6 +881,13 @@ def build_parser() -> argparse.ArgumentParser:
                      help="rewrite via an LLM (needs ANTHROPIC_API_KEY or OPENAI_API_KEY; "
                           "the default scaffold is fully offline)")
     lab.set_defaults(func=cmd_lab)
+
+    dq = common(sub.add_parser(
+        "data-quality",
+        help="every headline number with its provenance and confidence",
+    ))
+    dq.add_argument("--json", action="store_true", help="machine-readable output")
+    dq.set_defaults(func=cmd_data_quality)
 
     e = common(sub.add_parser("export", help="export analysis as JSON"))
     e.add_argument("--out", default=None)

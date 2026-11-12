@@ -235,6 +235,7 @@ class Store:
         since: str | None,
         repo_id: str | None,
         session_id: str | None = None,
+        until: str | None = None,
     ):
         clauses, params = [], []
         if provider:
@@ -243,6 +244,16 @@ class Store:
         if since:
             clauses.append("ts >= ?")
             params.append(since)
+        if until:
+            # Exclusive-ish in practice: `until` arrives as a bare date
+            # ("2026-08-18") from the dashboard's date picker, and event
+            # timestamps are full ISO datetimes — a plain `ts <= until` would
+            # silently drop every event *on* that date after midnight. `<`
+            # against the *next* day is what "through this date, inclusive"
+            # actually means, without needing to know the last event's exact
+            # time on that day.
+            clauses.append("ts < date(?, '+1 day')")
+            params.append(until)
         if repo_id:
             clauses.append("repo_id = ?")
             params.append(repo_id)
@@ -257,8 +268,9 @@ class Store:
         since: str | None = None,
         repo_id: str | None = None,
         session_id: str | None = None,
+        until: str | None = None,
     ) -> list[str]:
-        w, p = self._where(provider, since, repo_id, session_id)
+        w, p = self._where(provider, since, repo_id, session_id, until)
         rows = self.conn.execute(
             f"SELECT DISTINCT session_id FROM events{w} ORDER BY session_id", p
         ).fetchall()
@@ -308,11 +320,12 @@ class Store:
         since: str | None = None,
         repo_id: str | None = None,
         limit: int = 300,
+        until: str | None = None,
     ) -> list[dict]:
         """Lightweight session list for the session dropdown — deliberately not
         `sessions()`, which reconstructs every event of every session just to
         populate a picker."""
-        w, p = self._where(provider, since, repo_id)
+        w, p = self._where(provider, since, repo_id, until=until)
         rows = self.conn.execute(
             "SELECT session_id, "
             "       MAX(provider) AS provider, "
@@ -367,8 +380,9 @@ class Store:
         since: str | None = None,
         repo_id: str | None = None,
         session_id: str | None = None,
+        until: str | None = None,
     ) -> Iterator[tuple[str, list[Event]]]:
-        for sid in self.session_ids(provider, since, repo_id, session_id):
+        for sid in self.session_ids(provider, since, repo_id, session_id, until):
             yield sid, self.events_for(sid)
 
     def sessions(
@@ -377,12 +391,13 @@ class Store:
         since: str | None = None,
         repo_id: str | None = None,
         session_id: str | None = None,
+        until: str | None = None,
     ) -> list[Session]:
         from .analytics.rollups import summarize_session
 
         return [
             summarize_session(evs)
-            for _, evs in self.iter_sessions(provider, since, repo_id, session_id)
+            for _, evs in self.iter_sessions(provider, since, repo_id, session_id, until)
         ]
 
     def counts(self) -> dict[str, int]:
