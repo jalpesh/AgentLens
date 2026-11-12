@@ -122,6 +122,15 @@ def test_codex_treats_cumulative_counters_as_deltas(tmp_path):
     assert sum(u.input for u in usages) == 4000, "must equal the final cumulative total"
 
 
+def test_codex_input_tokens_include_cached_so_cached_is_not_billed_twice(tmp_path):
+    p = tmp_path / "rollout.jsonl"
+    p.write_text(json.dumps({"type": "event_msg", "payload": {"type": "token_count",
+        "info": {"total_token_usage": {"input_tokens": 1000, "cached_input_tokens": 800,
+                                       "output_tokens": 50}}}}))
+    (u,) = [e.usage for e in CodexAdapter().parse(SourceFile.of(p)) if e.usage]
+    assert (u.input, u.cache_read, u.output) == (200, 800, 50)
+
+
 def test_junie_finds_sessions_regardless_of_key_name(tmp_path):
     """Junie has moved this key between IDE releases; we locate it by shape."""
     for key in ("sessions", "history", "conversations"):
@@ -313,3 +322,58 @@ def test_all_seven_adapters_registered():
 
     assert len(ADAPTERS) == 7
     assert len({a.provider for a in ADAPTERS}) == 7  # no duplicate provider
+
+
+def _codex_rollout() -> list[dict]:
+    """Current Codex shape: everything wrapped in response_item / event_msg."""
+    ri = lambda p: {"timestamp": "2026-10-01T10:00:00Z", "type": "response_item", "payload": p}  # noqa: E731
+    return [
+        {"timestamp": "2026-10-01T10:00:00Z", "type": "session_meta",
+         "payload": {"id": "sess-1", "cwd": "/x", "model": "gpt-5.1-codex"}},
+        ri({"type": "message", "role": "user",
+            "content": [{"type": "input_text", "text": "<environment_context>cwd</environment_context>"}]}),
+        ri({"type": "message", "role": "user",
+            "content": [{"type": "input_text", "text": "fix the failing test"}]}),
+        {"timestamp": "2026-10-01T10:00:01Z", "type": "event_msg",
+         "payload": {"type": "user_message", "message": "fix the failing test"}},
+        ri({"type": "custom_tool_call", "name": "apply_patch", "call_id": "c1",
+            "input": "*** Begin Patch\n*** Update File: src/a.py\n@@\n-x\n+y\n*** End Patch"}),
+        ri({"type": "custom_tool_call_output", "call_id": "c1",
+            "output": json.dumps({"output": "ok", "metadata": {"exit_code": 0}})}),
+        ri({"type": "function_call", "name": "exec_command", "call_id": "c2",
+            "arguments": json.dumps({"cmd": "pytest -q", "workdir": "/x"})}),
+        ri({"type": "function_call_output", "call_id": "c2",
+            "output": "Exit code: 1\nWall time: 1s\nOutput:\nFAILED test_a"}),
+        {"timestamp": "2026-10-01T10:00:02Z", "type": "token_usage_record",
+         "payload": {"usage": {"input_tokens": 999999, "output_tokens": 999999}}},
+    ]
+
+
+@pytest.mark.parametrize("compressed", [False, True])
+def test_codex_current_rollout_format(tmp_path, compressed):
+    lines = "\n".join(json.dumps(r) for r in _codex_rollout())
+    if compressed:
+        zstd = pytest.importorskip("compression.zstd")
+        p = tmp_path / "sessions" / "rollout-x.jsonl.zst"
+        p.parent.mkdir()
+        p.write_bytes(zstd.compress(lines.encode()))
+    else:
+        p = tmp_path / "sessions" / "rollout-x.jsonl"
+        p.parent.mkdir()
+        p.write_text(lines)
+
+    a = CodexAdapter()
+    a.roots = lambda: [tmp_path / "sessions"]
+    assert [s.path for s in a.discover()] == [p]
+    events = list(a.parse(SourceFile.of(p)))
+
+    assert {e.session_id for e in events} == {"sess-1"}
+    users = [e.text for e in events if e.role is Role.USER]
+    assert users == ["fix the failing test"]  # injected context + event_msg dup skipped
+    calls = [e.tool for e in events if e.role is Role.TOOL_CALL]
+    assert [(t.kind, t.target_path) for t in calls] == [
+        (ToolKind.EDIT, "src/a.py"), (ToolKind.TEST, None)]
+    results = [e.tool for e in events if e.role is Role.TOOL_RESULT]
+    assert [(t.kind, t.exit_code) for t in results] == [
+        (ToolKind.EDIT, 0), (ToolKind.TEST, 1)]
+    assert not any(e.usage for e in events)  # token_usage_record not double-billed
