@@ -223,6 +223,23 @@ class Store:
         )
         self.conn.commit()
 
+    def purge_if_parser_changed(self, provider: str, schema_version: str) -> bool:
+        """Drop a provider's events when its parser version changed.
+
+        Event ids include `seq`, so a parser that now skips a message shifts
+        every later id; re-parsing on top of old rows would duplicate them.
+        Clearing the provider makes the same run re-parse all its files clean.
+        """
+        stale = self.conn.execute(
+            "SELECT 1 FROM sources WHERE provider = ? AND schema_version IS NOT ? LIMIT 1",
+            (provider, schema_version),
+        ).fetchone()
+        if stale:
+            self.conn.execute("DELETE FROM events WHERE provider = ?", (provider,))
+            self.conn.execute("DELETE FROM sources WHERE provider = ?", (provider,))
+            self.conn.commit()
+        return bool(stale)
+
     def reset(self) -> None:
         self.conn.executescript("DELETE FROM events; DELETE FROM sources;")
         self.conn.commit()

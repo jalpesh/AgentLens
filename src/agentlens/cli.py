@@ -229,6 +229,8 @@ def cmd_ingest(args) -> int:
             sources = a.discover()
             if not sources:
                 continue
+            if store.purge_if_parser_changed(a.provider.value, a.schema_version):
+                console.print(f"[dim]{a.display_name}: parser updated, re-reading all files.[/dim]")
             fresh = 0
             for s in sources:
                 key = str(s.path)
@@ -817,6 +819,47 @@ def cmd_tasks(args) -> int:
     return 0
 
 
+def _measure_table(title: str, measures) -> Table:
+    table = Table(title=title)
+    for col, kw in (("Metric", {}), ("Value", {"justify": "right"}), ("Basis", {}),
+                    ("Confidence", {})):
+        table.add_column(col, **kw)
+    for m in measures:
+        conf = m.confidence.value
+        table.add_row(m.label, _fmt_measure_value(m) if m.available else "Insufficient data",
+                      _SOURCE_LABEL.get(m.source.value, m.source.value),
+                      Text(conf if m.available else "—", style=_CONF_COLOR.get(conf, "white")))
+    return table
+
+
+def cmd_patterns(args) -> int:
+    """Prompt Pattern Mining: instructions and corrections you keep repeating."""
+    from .analytics.prompt_patterns import prompt_patterns
+
+    with _open_store(args) as store:
+        sessions = _scoped_sessions(args, store)
+    if not sessions:
+        console.print("[yellow]No data.[/yellow] Run [bold]agentlens ingest[/bold] first.")
+        return 1
+    out = prompt_patterns(sessions)
+    if args.json:
+        print(json.dumps({**out, "measures": [m.to_dict() for m in out["measures"]]},
+                         indent=2, default=str))
+        return 0
+    console.print(_measure_table("Prompt Patterns", out["measures"]))
+    if not out["patterns"]:
+        console.print("[green]No instruction or correction you repeat across sessions.[/green]")
+    for i, p in enumerate(out["patterns"], 1):
+        console.print(f"\n[bold]{i}. {p['title']}[/bold]  "
+                      f"[dim]{p['sessions']} session(s), {p['occurrences']}x, "
+                      f"confidence {p['confidence']}[/dim]")
+        console.print(f"   {p['problem']}")
+        for ex in p["examples"]:
+            console.print(Text(f"   “{ex}”", style="dim"))
+        console.print(Text(f"   → {p['recommendation']}", style="cyan"))
+    return 0
+
+
 def cmd_context(args) -> int:
     """Context Efficiency: where context comes from and what looks unnecessary."""
     from .analytics.context_efficiency import context_efficiency
@@ -831,16 +874,7 @@ def cmd_context(args) -> int:
         print(json.dumps({**out, "measures": [m.to_dict() for m in out["measures"]]},
                          indent=2, default=str))
         return 0
-    table = Table(title="Context Efficiency")
-    for col, kw in (("Metric", {}), ("Value", {"justify": "right"}), ("Basis", {}),
-                    ("Confidence", {})):
-        table.add_column(col, **kw)
-    for m in out["measures"]:
-        conf = m.confidence.value
-        table.add_row(m.label, _fmt_measure_value(m) if m.available else "Insufficient data",
-                      _SOURCE_LABEL.get(m.source.value, m.source.value),
-                      Text(conf if m.available else "—", style=_CONF_COLOR.get(conf, "white")))
-    console.print(table)
+    console.print(_measure_table("Context Efficiency", out["measures"]))
     if out["sources"]:
         console.print(Text("  Sources: " + ", ".join(
             f"{s['category']} {s['pct']:g}%" for s in out["sources"][:6]), style="dim"))
@@ -968,6 +1002,10 @@ def build_parser() -> argparse.ArgumentParser:
     cx = common(sub.add_parser("context", help="context efficiency: potential excess context"))
     cx.add_argument("--json", action="store_true", help="machine-readable output")
     cx.set_defaults(func=cmd_context)
+
+    pp = common(sub.add_parser("patterns", help="prompt patterns: instructions you keep repeating"))
+    pp.add_argument("--json", action="store_true", help="machine-readable output")
+    pp.set_defaults(func=cmd_patterns)
 
     e = common(sub.add_parser("export", help="export analysis as JSON"))
     e.add_argument("--out", default=None)

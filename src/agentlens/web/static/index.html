@@ -355,6 +355,14 @@
       <h3 style="margin-top:14px">Top opportunities</h3><div id="tbl-ctx-opp"></div>
       <h3 style="margin-top:14px">Where context came from</h3><div id="tbl-ctx-src"></div>
     </div>
+    <div class="card" id="patterns-card" style="margin-top:14px">
+      <h2>Prompt Patterns — what you keep telling every agent</h2>
+      <p class="dq-lead">Instructions typed into 3+ sessions and corrections after the agent
+        acted. Loops, re-asking, vague prompts and model mismatch are under Habits; repeated
+        pastes are under Context Efficiency. Heuristic: a pattern is a candidate, not proof.</p>
+      <div id="tbl-pp"></div>
+      <h3 style="margin-top:14px">Patterns</h3><div id="tbl-pp-list"></div>
+    </div>
     <div class="card" id="data-quality-card" style="margin-top:14px">
       <h2>Data quality — what each number is worth</h2>
       <p class="dq-lead" id="dq-lead"></p>
@@ -805,6 +813,7 @@ function renderOverview(d){
 
   renderTaskEconomics(d);
   renderContextEfficiency(d);
+  renderPromptPatterns(d);
   renderDataQuality(d);
 }
 
@@ -868,6 +877,22 @@ function renderContextEfficiency(d){
     {t:'Potential tokens', n:1, f:r => '~' + num(r.tokens)},
     {t:'Potential cost (first send, floor)', n:1, f:r => r.cost_usd ? '~' + money(r.cost_usd) : '—'},
   ], opps) : '<div class="empty">No context-excess signals found.</div>';
+}
+function renderPromptPatterns(d){
+  const pp = d.prompt_patterns || {};
+  const el = $('#tbl-pp');
+  if(!el) return;
+  el.innerHTML = (pp.measures || []).length ? measureTable(pp.measures)
+    : '<div class="empty">No data in this scope.</div>';
+  const ps = pp.patterns || [];
+  $('#tbl-pp-list').innerHTML = ps.length ? table([
+    {t:'Pattern', f:r => `<b>${esc(r.title)}</b><div class="dq-method">${esc(r.problem)}</div>`
+      + (r.examples.length ? `<div class="dq-method">e.g. “${r.examples.map(esc).join('” · “')}”</div>` : '')
+      + `<div class="dq-method">→ ${esc(r.recommendation)}</div>`},
+    {t:'Seen', n:1, f:r => `${num(r.occurrences)}× / ${num(r.sessions)} sess.`},
+    {t:'Re-typed tokens', n:1, f:r => r.tokens ? '~' + num(r.tokens) : '—'},
+    {t:'Confidence', f:r => esc(r.confidence)},
+  ], ps) : '<div class="empty">No instruction or correction repeated across sessions.</div>';
 }
 function renderTaskEconomics(d){
   const te = d.task_economics || {};

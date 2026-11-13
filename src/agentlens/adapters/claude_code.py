@@ -36,7 +36,7 @@ from .base import Adapter, SourceFile
 class ClaudeCodeAdapter(Adapter):
     provider = Provider.CLAUDE_CODE
     display_name = "Claude Code"
-    schema_version = "2"
+    schema_version = "3"
 
     def roots(self) -> list[Path]:
         env = os.environ.get("CLAUDE_CONFIG_DIR")
@@ -184,7 +184,9 @@ class ClaudeCodeAdapter(Adapter):
                     continue
 
                 text = self.text_of(content)
-                if not text.strip():
+                # The compaction summary rides in a user record; the system
+                # compact_boundary record already marks the compaction.
+                if not text.strip() or rec.get("isCompactSummary"):
                     continue
                 seq += 1
                 yield Event(seq=seq, role=Role.USER, text=text, **base)
