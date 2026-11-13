@@ -317,6 +317,13 @@
   <!-- ==================== CHANGE THIS (the differentiator) ============ -->
   <section class="panel on" id="p-waste">
     <div class="tiles" id="waste-tiles"></div>
+    <div class="card" id="recs-card" style="margin-bottom:14px">
+      <h2>Start here — the changes worth most</h2>
+      <p class="dq-lead">Habits, context waste and prompt patterns in one list, ranked by
+        estimated saving. Each is backed by the evidence shown; savings come from
+        overlapping lenses on the same sessions, so they are not added up.</p>
+      <div id="tbl-recs"></div>
+    </div>
     <h2>Habits you repeat — ranked by what they cost you</h2>
     <div id="waste-dismissed"></div>
     <div id="findings"></div>
@@ -814,6 +821,7 @@ function renderOverview(d){
   renderTaskEconomics(d);
   renderContextEfficiency(d);
   renderPromptPatterns(d);
+  renderRecommendations(d);
   renderDataQuality(d);
 }
 
@@ -893,6 +901,21 @@ function renderPromptPatterns(d){
     {t:'Re-typed tokens', n:1, f:r => r.tokens ? '~' + num(r.tokens) : '—'},
     {t:'Confidence', f:r => esc(r.confidence)},
   ], ps) : '<div class="empty">No instruction or correction repeated across sessions.</div>';
+}
+function renderRecommendations(d){
+  const el = $('#tbl-recs');
+  if(!el) return;
+  const rs = d.recommendations || [];
+  el.innerHTML = rs.length ? table([
+    {t:'Change', f:r => `<b>${esc(r.title)}</b><div class="dq-method">${esc(r.problem)}</div>`
+      + (r.evidence.length ? `<div class="dq-method">e.g. “${r.evidence.map(esc).join('” · “')}”</div>` : '')
+      + `<div class="dq-method">→ ${esc(r.recommendation)}</div>`},
+    {t:'From', f:r => esc(r.source)},
+    {t:'Sessions', n:1, f:r => num(r.sessions)},
+    {t:'Tokens', n:1, f:r => r.tokens ? '~' + num(r.tokens) : '—'},
+    {t:'Saving', n:1, f:r => r.cost_usd == null ? '<span class="dq-method">unknown</span>' : '~' + money(r.cost_usd)},
+    {t:'Confidence', f:r => esc(r.confidence)},
+  ], rs) : '<div class="empty">Nothing worth changing in this scope.</div>';
 }
 function renderTaskEconomics(d){
   const te = d.task_economics || {};

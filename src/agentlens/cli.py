@@ -860,6 +860,40 @@ def cmd_patterns(args) -> int:
     return 0
 
 
+def cmd_recommend(args) -> int:
+    """Optimization recommendations: the changes worth most, across every signal."""
+    from .analytics.context_efficiency import context_efficiency
+    from .analytics.prompt_patterns import prompt_patterns
+    from .analytics.recommendations import recommend
+
+    with _open_store(args) as store:
+        sessions = _scoped_sessions(args, store)
+    if not sessions:
+        console.print("[yellow]No data.[/yellow] Run [bold]agentlens ingest[/bold] first.")
+        return 1
+    findings, _ = run_all_scored(sessions)
+    recs = recommend([f.to_dict() for f in findings],
+                     context_efficiency(sessions)["opportunities"],
+                     prompt_patterns(sessions)["patterns"], limit=args.limit)
+    if args.json:
+        print(json.dumps(recs, indent=2, default=str))
+        return 0
+    if not recs:
+        console.print("[green]Nothing worth changing in this scope.[/green]")
+    for i, r in enumerate(recs, 1):
+        console.print(f"\n[bold]{i}. {r['title']}[/bold]  "
+                      f"[dim]{r['source']} · confidence {r['confidence']}[/dim]")
+        console.print(f"   {r['problem']}")
+        for ex in r["evidence"]:
+            console.print(Text(f"   “{ex}”", style="dim"))
+        console.print(Text(f"   → {r['recommendation']}", style="cyan"))
+        console.print(f"   [dim]{r['expected_impact']}[/dim]")
+    if recs:
+        console.print("\n[dim]Savings overlap (same sessions, different lenses); "
+                      "don't add them up.[/dim]")
+    return 0
+
+
 def cmd_context(args) -> int:
     """Context Efficiency: where context comes from and what looks unnecessary."""
     from .analytics.context_efficiency import context_efficiency
@@ -1006,6 +1040,11 @@ def build_parser() -> argparse.ArgumentParser:
     pp = common(sub.add_parser("patterns", help="prompt patterns: instructions you keep repeating"))
     pp.add_argument("--json", action="store_true", help="machine-readable output")
     pp.set_defaults(func=cmd_patterns)
+
+    rc = common(sub.add_parser("recommend", help="the changes worth most, across every signal"))
+    rc.add_argument("--json", action="store_true", help="machine-readable output")
+    rc.add_argument("--limit", type=int, default=10)
+    rc.set_defaults(func=cmd_recommend)
 
     e = common(sub.add_parser("export", help="export analysis as JSON"))
     e.add_argument("--out", default=None)
