@@ -817,6 +817,43 @@ def cmd_tasks(args) -> int:
     return 0
 
 
+def cmd_context(args) -> int:
+    """Context Efficiency: where context comes from and what looks unnecessary."""
+    from .analytics.context_efficiency import context_efficiency
+
+    with _open_store(args) as store:
+        sessions = _scoped_sessions(args, store)
+    if not sessions:
+        console.print("[yellow]No data.[/yellow] Run [bold]agentlens ingest[/bold] first.")
+        return 1
+    out = context_efficiency(sessions)
+    if args.json:
+        print(json.dumps({**out, "measures": [m.to_dict() for m in out["measures"]]},
+                         indent=2, default=str))
+        return 0
+    table = Table(title="Context Efficiency")
+    for col, kw in (("Metric", {}), ("Value", {"justify": "right"}), ("Basis", {}),
+                    ("Confidence", {})):
+        table.add_column(col, **kw)
+    for m in out["measures"]:
+        conf = m.confidence.value
+        table.add_row(m.label, _fmt_measure_value(m) if m.available else "Insufficient data",
+                      _SOURCE_LABEL.get(m.source.value, m.source.value),
+                      Text(conf if m.available else "—", style=_CONF_COLOR.get(conf, "white")))
+    console.print(table)
+    if out["sources"]:
+        console.print(Text("  Sources: " + ", ".join(
+            f"{s['category']} {s['pct']:g}%" for s in out["sources"][:6]), style="dim"))
+    if out["opportunities"]:
+        console.print("\n[bold]Top opportunities[/bold] (estimates; cost = first send only, a floor)")
+        for i, o in enumerate(out["opportunities"], 1):
+            console.print(f"  {i}. {o['title']} — {o['occurrences']}x in {o['sessions']} "
+                          f"session(s), ~{o['tokens']:,} tokens"
+                          + (f", ~{_money(o['cost_usd'])}" if o["cost_usd"] else ""))
+            console.print(Text(f"     {o['recommendation']}", style="dim"))
+    return 0
+
+
 def cmd_serve(args) -> int:
     from .web.server import serve
 
@@ -927,6 +964,10 @@ def build_parser() -> argparse.ArgumentParser:
     tk = common(sub.add_parser("tasks", help="task economics: cost and outcome per task"))
     tk.add_argument("--json", action="store_true", help="machine-readable output")
     tk.set_defaults(func=cmd_tasks)
+
+    cx = common(sub.add_parser("context", help="context efficiency: potential excess context"))
+    cx.add_argument("--json", action="store_true", help="machine-readable output")
+    cx.set_defaults(func=cmd_context)
 
     e = common(sub.add_parser("export", help="export analysis as JSON"))
     e.add_argument("--out", default=None)

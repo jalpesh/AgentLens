@@ -37,6 +37,7 @@ from ..analytics import (
     suggest,
 )
 from ..analytics.detectors import run_all
+from ..analytics.context_efficiency import context_efficiency
 from ..analytics.tasks import build_tasks, by_outcome as tasks_by_outcome, task_economics
 from ..redact import redact_obj
 from ..schema import Provider, Usage
@@ -175,6 +176,7 @@ def build_payload(
     engineering = rollups.engineering_metrics(sessions, findings)
     dq_measures = data_quality(sessions, findings)
     tasks = build_tasks(sessions, findings)
+    ctx_eff = context_efficiency(sessions)
 
     return {
         "totals": totals,
@@ -213,6 +215,10 @@ def build_payload(
             "measures": [m.to_dict() for m in task_economics(tasks)],
             "by_outcome": tasks_by_outcome(tasks),
             "tasks": [t.to_dict() for t in sorted(tasks, key=lambda t: -t.cost_usd)[:100]],
+        },
+        "context_efficiency": {
+            **ctx_eff,
+            "measures": [m.to_dict() for m in ctx_eff["measures"]],
         },
         "history": prompt_trends(sessions),
         "sessions": sorted(
