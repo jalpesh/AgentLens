@@ -742,7 +742,7 @@ function renderWaste(d){
   $('#waste-tiles').innerHTML = `
     <div class="tile hero"><div class="k">Reclaimable</div>
       <div class="v">${money(d.reclaimable_usd)}</div>
-      <div class="s">${pct}% of ${money(t.cost_usd)} total spend</div></div>
+      <div class="s">${pct}% of ${money(t.cost_usd)} total spend · largest habit per session, overlaps not added</div></div>
     <div class="tile"><div class="k">Total spend</div><div class="v">${money(t.cost_usd)}</div>
       <div class="s">${num(t.sessions)} sessions analysed</div></div>
     <div class="tile"><div class="k">Habits found</div><div class="v">${d.findings.length}</div>

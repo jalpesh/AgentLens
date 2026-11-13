@@ -36,7 +36,7 @@ from ..analytics import (
     score_prompt,
     suggest,
 )
-from ..analytics.detectors import run_all
+from ..analytics.detectors import run_all, run_all_scored
 from ..analytics.context_efficiency import context_efficiency
 from ..analytics.tasks import build_tasks, by_outcome as tasks_by_outcome, task_economics
 from ..redact import redact_obj
@@ -158,21 +158,14 @@ def build_payload(
     # turn-by-turn behaviour — see `_exclude_manual`.
     real_sessions = _exclude_manual(sessions)
 
-    findings = run_all(real_sessions)
+    findings, reclaimable = run_all_scored(real_sessions, dismissed)
     if dismissed:
         findings = _apply_dismissals(findings, dismissed)
     profile = fingerprint_all(real_sessions)
     totals = rollups.totals(sessions)
-    # Different detectors can legitimately point at overlapping evidence in
-    # the same session (a session can be flagged by more than one detector),
-    # so the sum across all findings is not guaranteed to be a distinct
-    # dollar figure. It can never legitimately exceed what was actually spent
-    # analysing these sessions — cap it here rather than let a detector's
-    # internal double-count (or two detectors' honest-but-overlapping totals)
-    # show the user a bill bigger than their real one. See
-    # `rollups.engineering_metrics` for the same cap applied to the
-    # loop-family subset specifically.
-    reclaimable = min(sum(f.wasted_usd for f in findings), totals["cost_usd"])
+    # Per-session floor that never double-counts overlapping detectors; see
+    # `run_all_scored`.
+    reclaimable = min(reclaimable, totals["cost_usd"])
     engineering = rollups.engineering_metrics(sessions, findings)
     dq_measures = data_quality(sessions, findings)
     tasks = build_tasks(sessions, findings)

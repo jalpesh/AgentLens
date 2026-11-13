@@ -41,7 +41,7 @@ from .analytics import (
     suggest,
 )
 from .analytics.skills import generic_suggestions, get as skills_get
-from .analytics.detectors import run_all
+from .analytics.detectors import run_all, run_all_scored
 from .redact import redact_obj
 from .store import SCHEMA_VERSION, Store, default_db_path
 
@@ -332,7 +332,7 @@ def cmd_waste(args) -> int:
         console.print("[yellow]No data.[/yellow] Run [bold]agentlens ingest[/bold] first.")
         return 1
 
-    findings = run_all(sessions)
+    findings, reclaimable = run_all_scored(sessions)
     spend = rollups.totals(sessions)["cost_usd"]
 
     if not findings:
@@ -345,12 +345,12 @@ def cmd_waste(args) -> int:
         )
         return 0
 
-    reclaimable = sum(f.wasted_usd for f in findings)
     pct = (100.0 * reclaimable / spend) if spend else 0.0
     console.print(
         Panel.fit(
             f"[bold]{_money(reclaimable)}[/bold] of {_money(spend)} "
-            f"([bold]{pct:.0f}%[/bold]) traced to habits you repeat.\n"
+            f"([bold]{pct:.0f}%[/bold]) traced to habits you repeat (at least; overlapping "
+            f"habits counted once per session).\n"
             f"[dim]Across {len(sessions)} session(s). Ranked by what it costs you.[/dim]",
             title="Change this",
             border_style="bright_red" if pct > 15 else "yellow",
