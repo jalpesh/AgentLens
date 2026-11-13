@@ -43,6 +43,12 @@ except ImportError:  # pragma: no cover
 
 _EXIT_RE = re.compile(r"(?:exit code|exited with code)[:\s]+(-?\d+)", re.I)
 _PATCH_FILE_RE = re.compile(r"^\*\*\* (?:Update|Add|Delete) File: (.+)$", re.M)
+#: Harness-injected user messages: <environment_context>, <command-name>, …
+#: and the "# AGENTS.md instructions … <INSTRUCTIONS>" block Codex prepends.
+#: Also context-continuation summaries and the auto-approval reviewer's
+#: "The following is the Codex agent history …" requests.
+_INJECTED = re.compile(r"^\s*(<|# AGENTS\.md instructions|This session is being continued "
+                       r"from a previous conversation|The following is the Codex agent history)")
 _SHELL_TOOLS = {"exec_command", "shell", "shell_command", "local_shell_call", "container.exec"}
 
 
@@ -115,7 +121,7 @@ def _dig(obj: Any, *names: str) -> Any:
 class CodexAdapter(Adapter):
     provider = Provider.CODEX
     display_name = "Codex CLI"
-    schema_version = "2"
+    schema_version = "3"
 
     def roots(self) -> list[Path]:
         home = Path(os.environ.get("CODEX_HOME") or (Path.home() / ".codex"))
@@ -252,8 +258,8 @@ class CodexAdapter(Adapter):
                 # Harness-injected context (<environment_context>,
                 # <command-name>, ...) arrives as a user message; it is not a
                 # prompt the person wrote.
-                # ponytail: leading-tag check; refine if real prompts start with "<".
-                if role == "user" and text.strip() and not text.lstrip().startswith("<"):
+                # ponytail: leading-marker check; refine if real prompts start with "<".
+                if role == "user" and text.strip() and not _INJECTED.match(text):
                     seq += 1
                     yield Event(seq=seq, role=Role.USER, text=text, **base)
                 elif role == "assistant" and text.strip():
@@ -267,9 +273,9 @@ class CodexAdapter(Adapter):
             if rtype in ("user_message", "user", "agent_message", "assistant"):
                 if not saw_response_messages:
                     text = self.text_of(payload.get("content") or payload.get("message"))
-                    if text.strip():
+                    is_user = rtype in ("user_message", "user")
+                    if text.strip() and not (is_user and _INJECTED.match(text)):
                         seq += 1
-                        is_user = rtype in ("user_message", "user")
                         yield Event(
                             seq=seq,
                             role=Role.USER if is_user else Role.ASSISTANT,

@@ -332,6 +332,8 @@ def _codex_rollout() -> list[dict]:
          "payload": {"id": "sess-1", "cwd": "/x", "model": "gpt-5.1-codex"}},
         ri({"type": "message", "role": "user",
             "content": [{"type": "input_text", "text": "<environment_context>cwd</environment_context>"}]}),
+        ri({"type": "message", "role": "user", "content": [{"type": "input_text",
+            "text": "# AGENTS.md instructions for /x\n\n<INSTRUCTIONS>\nbe terse\n</INSTRUCTIONS>"}]}),
         ri({"type": "message", "role": "user",
             "content": [{"type": "input_text", "text": "fix the failing test"}]}),
         {"timestamp": "2026-10-01T10:00:01Z", "type": "event_msg",
@@ -377,3 +379,26 @@ def test_codex_current_rollout_format(tmp_path, compressed):
     assert [(t.kind, t.exit_code) for t in results] == [
         (ToolKind.EDIT, 0), (ToolKind.TEST, 1)]
     assert not any(e.usage for e in events)  # token_usage_record not double-billed
+
+
+def test_harness_messages_are_not_prompts(tmp_path):
+    """Compaction summaries and agent-injected instructions are not prompts
+    the person wrote; counting them skews prompt mining and prompts/task."""
+    p = tmp_path / "s.jsonl"
+    base = {"sessionId": "s", "timestamp": "2026-10-01T10:00:00Z", "cwd": "/x"}
+    p.write_text("\n".join(json.dumps({**base, **r}) for r in [
+        {"type": "user", "isCompactSummary": True,
+         "message": {"role": "user", "content": "This session is being continued..."}},
+        {"type": "user", "message": {"role": "user", "content": "real prompt"}},
+    ]))
+    users = [e.text for e in ClaudeCodeAdapter().parse(SourceFile.of(p)) if e.role is Role.USER]
+    assert users == ["real prompt"]
+
+    rollout = _codex_rollout()
+    rollout.insert(1, {"timestamp": "2026-10-01T10:00:00Z", "type": "response_item", "payload": {
+        "type": "message", "role": "user", "content": [{"type": "input_text",
+        "text": "The following is the Codex agent history added since your last approval"}]}})
+    q = tmp_path / "rollout-y.jsonl"
+    q.write_text("\n".join(json.dumps(r) for r in rollout))
+    users = [e.text for e in CodexAdapter().parse(SourceFile.of(q)) if e.role is Role.USER]
+    assert users == ["fix the failing test"]

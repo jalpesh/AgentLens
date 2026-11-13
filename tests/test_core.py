@@ -290,3 +290,15 @@ def test_build_payload_explicit_range_wins_over_days_preset(tmp_path):
     # it must still surface it even with a conflicting `days` also present.
     out = build_payload(str(db), days=7, date_from="2019-01-01", date_to="2021-01-01")
     assert out["totals"]["sessions"] == 1
+
+
+def test_parser_version_change_purges_provider_so_reparse_cannot_duplicate(tmp_path):
+    with Store(tmp_path / "db.sqlite") as st:
+        ev = Event(session_id="s", provider=Provider.CODEX, seq=1, ts="2026-01-01T00:00:00",
+                   role=Role.USER, text="x")
+        st.add_events([ev])
+        st.mark_source("f.jsonl", "codex", 1, 1.0, "2")
+        assert not st.purge_if_parser_changed("codex", "2")
+        assert st.purge_if_parser_changed("codex", "3")
+        assert st.counts()["events"] == 0
+        assert not st.source_is_current("f.jsonl", 1, 1.0, "3")

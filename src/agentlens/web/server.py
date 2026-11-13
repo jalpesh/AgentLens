@@ -38,6 +38,7 @@ from ..analytics import (
 )
 from ..analytics.detectors import run_all, run_all_scored
 from ..analytics.context_efficiency import context_efficiency
+from ..analytics.prompt_patterns import prompt_patterns
 from ..analytics.tasks import build_tasks, by_outcome as tasks_by_outcome, task_economics
 from ..redact import redact_obj
 from ..schema import Provider, Usage
@@ -170,6 +171,7 @@ def build_payload(
     dq_measures = data_quality(sessions, findings)
     tasks = build_tasks(sessions, findings)
     ctx_eff = context_efficiency(sessions)
+    patterns = prompt_patterns(sessions)
 
     return {
         "totals": totals,
@@ -212,6 +214,10 @@ def build_payload(
         "context_efficiency": {
             **ctx_eff,
             "measures": [m.to_dict() for m in ctx_eff["measures"]],
+        },
+        "prompt_patterns": {
+            **patterns,
+            "measures": [m.to_dict() for m in patterns["measures"]],
         },
         "history": prompt_trends(sessions),
         "sessions": sorted(

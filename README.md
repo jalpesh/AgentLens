@@ -114,6 +114,7 @@ agentlens lab "..."         # score a prompt BEFORE you send it
 agentlens data-quality      # every headline number with its provenance + confidence
 agentlens tasks             # task economics: cost and outcome per inferred task
 agentlens context           # context efficiency: potential excess context + fixes
+agentlens patterns          # instructions and corrections you repeat across sessions
 agentlens serve             # live dashboard on http://127.0.0.1:7878
 agentlens export            # redacted JSON for your own analysis
 ```
@@ -317,9 +318,9 @@ sessions can only be removed from a terminal: `agentlens sessions --remove
 <session_id>` — scoped so it can only ever delete a manual entry, never real
 ingested history.
 
-### Task Economics and Context Efficiency
+### Task Economics, Context Efficiency and Prompt Patterns
 
-Both work on the shared event format, so every supported agent gets them.
+All three work on the shared event format, so every supported agent gets them.
 
 - **Tasks** are inferred, not recorded: sessions in the same agent + repo +
   branch that resume within 30 minutes are one task. Outcome comes only from
@@ -332,6 +333,13 @@ Both work on the shared event format, so every supported agent gets them.
   beyond ~10k tokens, and the same large block pasted into several prompts.
   It is labelled heuristic and never called "wasted". Potential cost is a floor:
   it prices the first send only, not re-sending on later turns.
+- **Prompt patterns** mines your history for directive sentences ("don't
+  create another service", "use the existing repository layer") typed into 3+
+  sessions — a rule that belongs in CLAUDE.md / AGENTS.md /
+  `.junie/guidelines.md` — and for sessions with 3+ corrections after the agent
+  acted, a hint that a constraint was missing. Harness-injected messages
+  (system reminders, AGENTS.md blocks, compaction summaries) are not counted as
+  prompts. Examples are your own text and never leave your machine.
 
 Anything that can't be established shows as "Insufficient data", never 0.
 
