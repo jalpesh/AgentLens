@@ -115,6 +115,7 @@ agentlens data-quality      # every headline number with its provenance + confid
 agentlens tasks             # task economics: cost and outcome per inferred task
 agentlens context           # context efficiency: potential excess context + fixes
 agentlens patterns          # instructions and corrections you repeat across sessions
+agentlens recommend         # the changes worth most, across every signal above
 agentlens serve             # live dashboard on http://127.0.0.1:7878
 agentlens export            # redacted JSON for your own analysis
 ```
@@ -318,9 +319,9 @@ sessions can only be removed from a terminal: `agentlens sessions --remove
 <session_id>` — scoped so it can only ever delete a manual entry, never real
 ingested history.
 
-### Task Economics, Context Efficiency and Prompt Patterns
+### Task Economics, Context Efficiency, Prompt Patterns and Recommendations
 
-All three work on the shared event format, so every supported agent gets them.
+All of these work on the shared event format, so every supported agent gets them.
 
 - **Tasks** are inferred, not recorded: sessions in the same agent + repo +
   branch that resume within 30 minutes are one task. Outcome comes only from
@@ -340,6 +341,12 @@ All three work on the shared event format, so every supported agent gets them.
   acted, a hint that a constraint was missing. Harness-injected messages
   (system reminders, AGENTS.md blocks, compaction summaries) are not counted as
   prompts. Examples are your own text and never leave your machine.
+- **Recommendations** ("Start here" on the *Change this* tab, `agentlens
+  recommend`) puts waste habits, context opportunities and prompt patterns into
+  one list ranked by estimated saving, each with problem, evidence, fix,
+  expected impact, confidence and affected sessions. It adds no new detection.
+  Savings are lenses on the same sessions and overlap, so they are never summed;
+  an unpriced model shows "cost unknown" rather than $0.
 
 Anything that can't be established shows as "Insufficient data", never 0.
 

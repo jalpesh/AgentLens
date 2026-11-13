@@ -129,6 +129,9 @@ class Finding:
     #: is the sanity check every consumer of this list can rely on. Empty for
     #: every detector that isn't attempt-shaped (most of them).
     attempts: list[Attempt] = field(default_factory=list)
+    #: Distinct sessions behind this finding, counted before `evidence` is cut
+    #: to 5. 0 means not counted (cross-session findings): use the evidence.
+    sessions: int = 0
 
     def advice_for(self, occurrences: int | None = None) -> str:
         """Highest-threshold escalation that applies, falling back to
@@ -238,6 +241,7 @@ def merge(findings: list[Finding]) -> list[Finding]:
     out = list(by_name.values())
     for f in out:
         # Lead with the most expensive example — that's the one that lands.
+        f.sessions = len({e.session_id for e in f.evidence})
         f.evidence.sort(key=lambda e: -e.cost_usd)
         f.evidence = f.evidence[:5]
         # Same cap and reasoning as evidence — a single session's worth of

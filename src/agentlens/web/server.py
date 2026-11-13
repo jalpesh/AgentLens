@@ -39,6 +39,7 @@ from ..analytics import (
 from ..analytics.detectors import run_all, run_all_scored
 from ..analytics.context_efficiency import context_efficiency
 from ..analytics.prompt_patterns import prompt_patterns
+from ..analytics.recommendations import recommend
 from ..analytics.tasks import build_tasks, by_outcome as tasks_by_outcome, task_economics
 from ..redact import redact_obj
 from ..schema import Provider, Usage
@@ -184,6 +185,8 @@ def build_payload(
         "by_provider": rollups.by_provider(sessions),
         "tool_mix": rollups.tool_mix(sessions),
         "findings": [f.to_dict() for f in findings],
+        "recommendations": recommend([f.to_dict() for f in findings],
+                                     ctx_eff["opportunities"], patterns["patterns"]),
         "dismissed_count": dismissed_count,
         "playbook": [r.to_dict() for r in build_playbook(findings)],
         "curated_reference": CURATED_REFERENCE,
