@@ -346,6 +346,15 @@
       <details style="margin-top:10px"><summary>Tasks (most expensive first)</summary>
         <div id="tbl-tasks"></div></details>
     </div>
+    <div class="card" id="ctx-eff-card" style="margin-top:14px">
+      <h2>Context Efficiency — what the agent was given vs. what looks unnecessary</h2>
+      <p class="dq-lead">Estimates from concrete signals (re-reads of unchanged files,
+        generated files, oversized outputs, repeated pastes). Potential excess is not
+        proof the tokens were unused.</p>
+      <div id="tbl-ctx"></div>
+      <h3 style="margin-top:14px">Top opportunities</h3><div id="tbl-ctx-opp"></div>
+      <h3 style="margin-top:14px">Where context came from</h3><div id="tbl-ctx-src"></div>
+    </div>
     <div class="card" id="data-quality-card" style="margin-top:14px">
       <h2>Data quality — what each number is worth</h2>
       <p class="dq-lead" id="dq-lead"></p>
@@ -795,6 +804,7 @@ function renderOverview(d){
   ], d.tool_mix);
 
   renderTaskEconomics(d);
+  renderContextEfficiency(d);
   renderDataQuality(d);
 }
 
@@ -838,6 +848,26 @@ function measureTable(ms){
       + `${m.confidence === 'none' ? '—' : esc(m.confidence)}</span>`
       + (m.sample_size != null ? `<div class="dq-method">n=${num(m.sample_size)}</div>` : '')},
   ], ms);
+}
+function renderContextEfficiency(d){
+  const ce = d.context_efficiency || {};
+  const el = $('#tbl-ctx');
+  if(!el) return;
+  el.innerHTML = (ce.measures || []).length ? measureTable(ce.measures)
+    : '<div class="empty">No data in this scope.</div>';
+  $('#tbl-ctx-src').innerHTML = table([
+    {t:'Source', f:r => esc(r.category)},
+    {t:'Tokens', n:1, f:r => num(r.tokens)},
+    {t:'Share', n:1, f:r => r.pct + '%'},
+  ], ce.sources || []);
+  const opps = ce.opportunities || [];
+  $('#tbl-ctx-opp').innerHTML = opps.length ? table([
+    {t:'Opportunity', f:r => `<b>${esc(r.title)}</b><div class="dq-method">${esc(r.recommendation)}</div>`
+      + (r.examples.length ? `<div class="dq-method">e.g. ${esc(r.examples.join('; '))}</div>` : '')},
+    {t:'Seen', n:1, f:r => `${num(r.occurrences)}× / ${num(r.sessions)} sess.`},
+    {t:'Potential tokens', n:1, f:r => '~' + num(r.tokens)},
+    {t:'Potential cost (first send, floor)', n:1, f:r => r.cost_usd ? '~' + money(r.cost_usd) : '—'},
+  ], opps) : '<div class="empty">No context-excess signals found.</div>';
 }
 function renderTaskEconomics(d){
   const te = d.task_economics || {};

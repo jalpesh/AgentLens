@@ -112,6 +112,8 @@ agentlens projects          # list projects available to --project
 agentlens sessions          # per-session breakdown
 agentlens lab "..."         # score a prompt BEFORE you send it
 agentlens data-quality      # every headline number with its provenance + confidence
+agentlens tasks             # task economics: cost and outcome per inferred task
+agentlens context           # context efficiency: potential excess context + fixes
 agentlens serve             # live dashboard on http://127.0.0.1:7878
 agentlens export            # redacted JSON for your own analysis
 ```
@@ -314,6 +316,24 @@ never mistaken for something AgentLens actually parsed. Manually-added
 sessions can only be removed from a terminal: `agentlens sessions --remove
 <session_id>` — scoped so it can only ever delete a manual entry, never real
 ingested history.
+
+### Task Economics and Context Efficiency
+
+Both work on the shared event format, so every supported agent gets them.
+
+- **Tasks** are inferred, not recorded: sessions in the same agent + repo +
+  branch that resume within 30 minutes are one task. Outcome comes only from
+  local evidence: *validated* (last test run passed), *unvalidated* (code
+  changed, no test result), *failing*, *no change*, or *unknown* (the agent's
+  history has no tool events — never guessed). Cost per completed task divides
+  all spend on observable tasks, failures included, by completed tasks.
+- **Context efficiency** sums *potential* excess from four signals: re-reading a
+  file that hasn't changed, reading generated/vendored/lock files, tool output
+  beyond ~10k tokens, and the same large block pasted into several prompts.
+  It is labelled heuristic and never called "wasted". Potential cost is a floor:
+  it prices the first send only, not re-sending on later turns.
+
+Anything that can't be established shows as "Insufficient data", never 0.
 
 ## What it detects
 
