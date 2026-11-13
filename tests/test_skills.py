@@ -141,6 +141,51 @@ def test_command_artifact_goes_where_commands_live(world):
     assert s.artifact.content.startswith("---\n")
 
 
+# --- gaps found in a real skills-coverage audit: every detector should have
+# a downloadable fix, not just some of them (2026-08-18) --------------------
+
+
+def test_output_flood_has_a_downloadable_fix(world):
+    """Previously the only detectors with no triggered suggestion at all —
+    a real finding that never offered anything to install."""
+    _, findings, profile = world
+    assert "output_flood" in {f.detector for f in findings}, (
+        "fixture must produce an output_flood finding to test this"
+    )
+    s = get(suggest(findings, profile), "output-flood-guideline")
+    assert s is not None
+    assert s.triggered_by == "output_flood"
+    assert s.evidence_usd > 0
+
+
+def test_vague_instruction_has_a_downloadable_fix(world):
+    _, findings, profile = world
+    assert "vague_instruction" in {f.detector for f in findings}, (
+        "fixture must produce a vague_instruction finding to test this"
+    )
+    s = get(suggest(findings, profile), "scope-command")
+    assert s is not None
+    assert s.triggered_by == "vague_instruction"
+    assert s.artifact.path == ".claude/commands/scope.md"
+
+
+def test_every_detector_with_findings_has_at_least_one_suggestion(world):
+    """The general form of the two tests above: whatever detector fired in
+    this fixture, something in `suggest()` must be triggered by it (or by
+    the loop-family detectors sharing `debug-command`). Catches the next gap
+    the same way this one was found, instead of one test per detector."""
+    _, findings, profile = world
+    fired = {f.detector for f in findings}
+    triggered = {s.triggered_by for s in suggest(findings, profile)}
+    # loop/blind_retry/target_churn share one suggestion keyed to whichever
+    # of them appears first — see `suggest()`'s debug-command block — so a
+    # detector in this set is covered even if it's not the literal trigger
+    # recorded on the Suggestion.
+    loop_family = {"loop", "blind_retry", "target_churn"}
+    uncovered = fired - triggered - (loop_family if loop_family & fired else set())
+    assert not uncovered, f"detector(s) with a finding but no suggestion: {uncovered}"
+
+
 def test_generated_json_is_human_readable(world):
     """These files get opened and read. Escaped unicode looks like a bug."""
     _, findings, profile = world
@@ -183,9 +228,12 @@ def test_generic_section_never_sets_triggered_by():
         assert s.triggered_by == ""
 
 
-def test_generic_section_is_present_and_has_three_verified_tools():
+def test_generic_section_is_present_and_has_four_verified_entries():
     ids = {s.id for s in generic_suggestions()}
-    assert ids == {"generic-ast-grep", "generic-codegraph", "generic-codebase-memory"}
+    assert ids == {
+        "generic-ast-grep", "generic-codegraph", "generic-codebase-memory",
+        "generic-subagent-cost-routing",
+    }
 
 
 def test_generic_section_only_names_verified_packages():
@@ -198,14 +246,35 @@ def test_generic_section_only_names_verified_packages():
 
 
 def test_triggered_suggestions_never_include_generic_only_packages_unless_organic(world):
-    """The three generic-bucket packages must not leak into the *triggered*
-    list unless something in the user's own data actually triggered them —
+    """The generic-bucket entries must not leak into the *triggered* list
+    unless something in the user's own data actually triggered them —
     `discovery-tools` (metric-triggered) is the one legitimate exception,
     and it names its own trigger explicitly."""
     _, findings, profile = world
+    generic_ids = {s.id for s in generic_suggestions()}
     for s in suggest(findings, profile):
-        if s.id in {"generic-ast-grep", "generic-codegraph", "generic-codebase-memory"}:
+        if s.id in generic_ids:
             raise AssertionError(f"{s.id} leaked into the triggered suggestion list")
+
+
+def test_subagent_cost_routing_skill_only_names_verified_mechanisms(world):
+    """This skill exists to answer a real request ("route cheap/expensive
+    work across subagents automatically") without inventing a feature that
+    doesn't exist. It must document Claude Code's actual, documented
+    mechanism (a per-invocation `model` param on the Task tool, one of
+    `sonnet`/`opus`/`haiku` — verified against code.claude.com/docs and a
+    live GitHub issue confirming the exact enum, 2026-08-18), not a
+    plausible-sounding one. Locks the skill to that specific, checkable
+    claim so a future edit can't quietly drift into guessing."""
+    s = get(generic_suggestions(), "generic-subagent-cost-routing")
+    assert s is not None
+    assert s.artifact.path == ".claude/skills/cost-routing-subagents/SKILL.md"
+    content = s.artifact.content
+    assert "code.claude.com/docs/en/sub-agents" in content
+    for alias in ('"sonnet"', '"opus"', '"haiku"'):
+        assert alias in content
+    # Never invents a fourth alias or a feature name AgentLens didn't verify.
+    assert "fable" not in content.lower()
 
 
 def test_both_sections_present_given_a_rich_fixture(world):

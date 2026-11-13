@@ -25,6 +25,8 @@ from ..analytics import (
     build_playbook,
     build_session_detail,
     content_type_budget,
+    data_quality,
+    data_quality_summary,
     fingerprint_all,
     generic_suggestions,
     prompt_trends,
@@ -35,9 +37,12 @@ from ..analytics import (
     suggest,
 )
 from ..analytics.detectors import run_all
+from ..analytics.tasks import build_tasks, by_outcome as tasks_by_outcome, task_economics
 from ..redact import redact_obj
 from ..schema import Provider, Usage
 from ..store import Store
+
+_DATE_RE = re.compile(r"\d{4}-\d{2}-\d{2}")
 
 STATIC = Path(__file__).parent / "static"
 _MARKER = "const AGENTLENS_STATIC_DATA = null;"
@@ -121,15 +126,22 @@ def build_payload(
     days: int | None = None,
     repo_id: str | None = None,
     session_id: str | None = None,
+    date_from: str | None = None,
+    date_to: str | None = None,
 ) -> dict:
     """The dashboard's full data payload — same function whether it's served
     live over `/api/data` or baked into a static export, so the two can never
     disagree about what a session or a finding looks like."""
     from datetime import datetime, timedelta
 
-    since = (datetime.now() - timedelta(days=days)).strftime("%Y-%m-%d") if days else None
+    # An explicit range is the more specific filter, so it wins over `days`.
+    if date_from or date_to:
+        days = None
+        since = date_from
+    else:
+        since = (datetime.now() - timedelta(days=days)).strftime("%Y-%m-%d") if days else None
     with Store(db) as store:
-        pairs = list(store.iter_sessions(provider, since, repo_id, session_id))
+        pairs = list(store.iter_sessions(provider, since, repo_id, session_id, date_to))
         sessions = [evs for _, evs in pairs]
         summaries = [rollups.summarize_session(e) for e in sessions]
         # Scope options are deliberately computed UNFILTERED — a dropdown that
@@ -161,6 +173,8 @@ def build_payload(
     # loop-family subset specifically.
     reclaimable = min(sum(f.wasted_usd for f in findings), totals["cost_usd"])
     engineering = rollups.engineering_metrics(sessions, findings)
+    dq_measures = data_quality(sessions, findings)
+    tasks = build_tasks(sessions, findings)
 
     return {
         "totals": totals,
@@ -187,6 +201,19 @@ def build_payload(
         "generic_suggestions": [s.to_dict() for s in generic_suggestions()],
         "profile": profile.to_dict(),
         "engineering": engineering,
+        # Provenance layer: every headline number re-stated with where it came
+        # from and how far to trust it. Computed over the same `sessions` and
+        # `findings` the tiles above use, so "Total spend" here is the same
+        # dollar figure as `totals` — only now it carries its confidence.
+        "data_quality": {
+            "measures": [m.to_dict() for m in dq_measures],
+            "summary": data_quality_summary(dq_measures),
+        },
+        "task_economics": {
+            "measures": [m.to_dict() for m in task_economics(tasks)],
+            "by_outcome": tasks_by_outcome(tasks),
+            "tasks": [t.to_dict() for t in sorted(tasks, key=lambda t: -t.cost_usd)[:100]],
+        },
         "history": prompt_trends(sessions),
         "sessions": sorted(
             (
@@ -213,6 +240,8 @@ def build_payload(
         "active_scope": {
             "provider": provider,
             "days": days,
+            "date_from": date_from,
+            "date_to": date_to,
             "repo_id": repo_id,
             "session_id": session_id,
             "project_label": next(
@@ -292,13 +321,20 @@ def make_handler(db: str | None):
             days = int(q["days"][0]) if q.get("days") and q["days"][0].isdigit() else None
             repo_id = (q.get("repo_id") or [None])[0] or None
             session_id = (q.get("session_id") or [None])[0] or None
+            # Trust boundary: only bare YYYY-MM-DD reaches the SQL date() call.
+            date_from, date_to = (
+                v if v and _DATE_RE.fullmatch(v) else None
+                for v in ((q.get(k) or [None])[0] for k in ("date_from", "date_to"))
+            )
 
             if u.path in ("/", "/index.html"):
                 html = (STATIC / "index.html").read_bytes()
                 self._send(html, "text/html; charset=utf-8")
             elif u.path == "/api/data":
                 try:
-                    self._json(build_payload(db, provider, days, repo_id, session_id))
+                    self._json(build_payload(
+                        db, provider, days, repo_id, session_id, date_from, date_to
+                    ))
                 except Exception as exc:
                     self._json({"error": str(exc)}, 500)
             elif u.path == "/api/session":

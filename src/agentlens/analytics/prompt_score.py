@@ -20,6 +20,19 @@ from ..pricing import context_limit_of, lookup
 from ..schema import Event, Role
 
 _FILE_REF = re.compile(r"[@\w./\\-]+\.[a-zA-Z]{1,6}\b|@[\w./-]+")
+#: A file reference that *looks* like one to this regex but names nothing —
+#: `@FILE`, `@<FILE>`, `@path/to/file`, `@your_file.py`. Found from a real
+#: report: a person's actual prompt to their coding agent (not run through
+#: this scorer first) read "In @<FILE>, make sure…" — a leftover, unfilled
+#: `scaffold()` placeholder (see rewrite.py) they'd copied forward without
+#: noticing it wasn't a real path. `@<FILE>` itself already fails `_FILE_REF`
+#: (the angle brackets break the match), so that exact case was never the
+#: gap — bare placeholder words are: `@FILE`, `@file`, `@filename`, `@path`,
+#: written with no extension and no directory separator, which *do* match
+#: `_FILE_REF` and were previously treated as if they named something real.
+_PLACEHOLDER_FILE_REF = re.compile(
+    r"^@?<?\s*(file|filename|path|filepath|your[_-]?file|placeholder)\s*>?$", re.I
+)
 _ACCEPTANCE = re.compile(
     r"\b(must pass|should pass|expect\w*|assert\w*|acceptance|verify|"
     r"test[s]? (pass|green)|returns?|output should|so that)\b",
@@ -137,11 +150,25 @@ def score_prompt(text: str, model: str = "claude-sonnet-4-5") -> PromptReport:
         )
 
     # --- the expensive omissions (heaviest penalties) ------------------
-    if not _FILE_REF.search(text):
+    file_refs = _FILE_REF.findall(text)
+    if not file_refs:
         add(
             "no_file_ref", "No file or path referenced", 22,
             "Name the file with @path/to/file. Without it the agent greps your repo to "
             "find out what you meant, and that search is billed to you.",
+        )
+    elif all(_PLACEHOLDER_FILE_REF.match(ref.lstrip("@")) for ref in file_refs):
+        # Every match *looks* like a file reference but names nothing real —
+        # same underlying problem as no_file_ref, phrased differently because
+        # the fix is different: swap the placeholder for a real path, not add
+        # one from scratch.
+        add(
+            "placeholder_file_ref",
+            "File reference is a placeholder, not a real path", 20,
+            f'"{file_refs[0]}" tells the agent a file matters but not which one — the agent '
+            "can't resolve it either, and either guesses or asks. Replace it with the actual "
+            'path, e.g. "@src/app.py".',
+            file_refs[0],
         )
     if not _ACCEPTANCE.search(text):
         add(

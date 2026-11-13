@@ -424,6 +424,75 @@ fetching one, add the answer here in a few lines.
             )
         )
 
+    # --- output flood → pipe/filter before it re-enters context -------------
+    if "output_flood" in by_name:
+        out.append(
+            Suggestion(
+                id="output-flood-guideline",
+                kind="guideline",
+                title="Filter command output before it re-enters context",
+                why=cite(
+                    "output_flood",
+                    "Full command output gets re-sent as input on every later turn — the "
+                    "flood is billed once per turn it stays in the conversation, not once.",
+                ),
+                triggered_by="output_flood",
+                artifact=Artifact(
+                    path="AGENTS.md",
+                    content=(
+                        "## Command output\n\n"
+                        "- Pipe through `head`/`tail`/`grep` for the lines that matter — "
+                        "`npm ls --all | grep <package>`, not the full tree.\n"
+                        "- Prefer a tool's own quiet/summary flag (`-q`, `--silent`, "
+                        "`--porcelain`) over parsing full verbose output.\n"
+                        "- If the full output is genuinely needed once, save it to a file "
+                        "and reference the file — don't let it sit in the conversation and "
+                        "get re-sent on every later turn.\n"
+                    ),
+                ),
+                evidence_usd=cost("output_flood"),
+            )
+        )
+
+    # --- vague instruction → force the same shape prompt Lab already scores -
+    if "vague_instruction" in by_name:
+        f = by_name["vague_instruction"]
+        sample = f.evidence[0].quote if f.evidence else "the vague prompt"
+        out.append(
+            Suggestion(
+                id="scope-command",
+                kind="command",
+                title="A /scope command that blocks a vague ask before it's sent",
+                why=cite(
+                    "vague_instruction",
+                    "The agent had to go hunting for the file and the acceptance check "
+                    "instead of being told — that hunting is billed to you.",
+                ),
+                triggered_by="vague_instruction",
+                artifact=_command(
+                    "scope",
+                    "Force a file reference and an acceptance check before sending a "
+                    "task — the same two things Prompt Lab penalizes most heavily.",
+                    f"""
+Before sending this, fill in both — a real path and a real check, not a
+placeholder like `<FILE>`:
+
+- **File(s):** `@path/to/file` — the agent shouldn't have to grep the repo
+  to find out what you mean.
+- **Acceptance check:** the command or observable outcome that proves it
+  worked — `pytest -q must pass`, `returns 404 for expired tokens`.
+
+Example this was generated from: "{sample[:120]}"
+
+If you can't fill in the file yet because you don't know which one it is,
+say that explicitly ("find the file that handles X, then...") — that's a
+real instruction. A silently missing file reference is not.
+""",
+                ),
+                evidence_usd=cost("vague_instruction"),
+            )
+        )
+
     # --- discovery share → the same code-graph suggestion the Engineering
     # tab links to, triggered on a rollup metric rather than a Finding. -----
     discovery_pct = metrics.get("discovery_share_pct") or 0.0
@@ -531,6 +600,99 @@ def generic_suggestions() -> list[Suggestion]:
             unverified_category=False,
             artifact=_mcp_stub(
                 "codebase-memory", "npx", ["-y", "codebase-memory-mcp"]
+            ),
+        ),
+        Suggestion(
+            id="generic-subagent-cost-routing",
+            kind="skill",
+            title="Plan in one model, execute in a cheaper one — via subagents",
+            why=(
+                "Some setups plan and implement in different models automatically. "
+                "On a setup that doesn't, a session that plans an architecture and "
+                "then grinds through twelve mechanical file edits pays the same "
+                "per-token rate for the plan and every boilerplate edit that "
+                "followed it — even though only the plan actually needed the "
+                "stronger model. This skill is a manual, portable version of that "
+                "same idea: dispatch the mechanical work to a cheaper model on "
+                "purpose, instead of leaving everything on whatever model started "
+                "the conversation."
+            ),
+            triggered_by="",
+            unverified_category=False,
+            artifact=_skill(
+                "cost-routing-subagents",
+                "Route mechanical, well-specified work to a cheaper model via "
+                "subagents, and reserve the current model for planning, design "
+                "decisions and anything ambiguous. Use before starting a "
+                "multi-step task that mixes architecture/debugging with routine "
+                "edits, or when asked to keep a task's cost down.",
+                """
+## Cost-routing subagents
+
+Claude Code subagents (the Task tool) accept a `model` parameter per
+invocation — `sonnet`, `opus`, or `haiku` — independent of whatever model is
+running the main conversation. That's a real, documented mechanism (see
+https://code.claude.com/docs/en/sub-agents), not a hypothetical one, and it's
+what this skill is built on: you don't need an account-level "plan in a
+strong model, implement in a cheap one" feature to get the same effect —
+you can drive it yourself, per task.
+
+### The routing rule
+
+Before starting a multi-step task, split it into two kinds of work:
+
+1. **Planning work** — architecture decisions, debugging something that
+   isn't obvious yet, anything where being wrong is expensive to unwind.
+   Do this yourself, in the model already running the conversation. Don't
+   delegate it — a cheap model asked to make a judgment call is exactly
+   where "cheaper" turns into "more turns to converge," which is more
+   expensive than not routing at all.
+2. **Mechanical work** — edits with a clear spec, renames, boilerplate,
+   running and reporting back test output, anything you could describe to
+   a competent junior engineer in one sentence and trust the result. Once
+   you've made the plan, dispatch each mechanical piece as its own Task
+   call with `model: "sonnet"` (or `model: "haiku"` for the smallest, most
+   rote steps — formatting, a one-line fix with an exact diagnosis
+   already in hand).
+3. **A subtask that's genuinely hard but self-contained** — one part of a
+   larger plan needs real reasoning, but doesn't need the full context of
+   the main conversation to do it. Dispatch it with `model: "opus"`
+   instead of doing it inline — this keeps the expensive reasoning scoped
+   to the one subtask that needs it, rather than running the *whole*
+   conversation on the most expensive model because one part of it did.
+
+### What this looks like in practice
+
+```
+1. Read the failing test and the relevant file yourself. Diagnose the bug.
+2. Dispatch the mechanical fix: Task(subagent_type="general-purpose",
+   model="sonnet", prompt="Apply this exact fix to src/foo.py:
+   <diff/instructions>. Run `pytest tests/test_foo.py -q` and report the
+   output verbatim.")
+3. If one part of the plan turns out to need real judgment on its own —
+   say, reconciling two conflicting call sites — dispatch that one part
+   with model="opus" rather than downgrading it to sonnet or pulling it
+   back into the main conversation.
+4. Review each subagent's report. If it converged, move on. If it didn't,
+   that's new information for you (the planning model) to reason about —
+   don't just re-dispatch the same instruction hoping for a different
+   result.
+```
+
+### When NOT to route
+
+- The task is small enough that splitting it costs more in overhead
+  (a second Task call, context handoff) than it saves.
+- The "mechanical" step turns out to need a judgment call partway
+  through — pull it back rather than watching a cheap model guess.
+- You're not on Claude Code, or your setup already routes models for you
+  (some do this automatically) — check before adding a manual layer on
+  top of one that already exists.
+
+> Generated by AgentLens. Not project-specific — this is a general pattern,
+> not a rule derived from your session history the way the "Suggested for
+> this project" section above is.
+""",
             ),
         ),
     ]
