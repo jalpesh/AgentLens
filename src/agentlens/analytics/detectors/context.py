@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import re
 
-from ...pricing import canonical, lookup
+from ...pricing import canonical, cost_of, lookup
 from ...schema import Event, Role, ToolKind
 from .base import Detector, Evidence, Finding
 
@@ -19,6 +19,9 @@ _ERROR_EVIDENCE = re.compile(
     r"stack trace|line \d+|got \d{3}|expected)\b",
     re.I,
 )
+_LOG_PASTE = re.compile(r"^\s*\d{2}-\d{2} \d{2}:\d{2}:\d{2}|^\s*\d{4}-\d{2}-\d{2}[ T]\d{2}:", re.M)
+#: A "mechanical" turn is small; more tool calls than this is real agent work.
+MECHANICAL_MAX_CALLS = 10
 _VAGUE_OPENER = re.compile(
     r"^\s*(fix|make it work|it'?s broken|improve|clean ?up|optimi[sz]e|refactor|"
     r"update|change|handle|do it|continue|carry on|go ahead|check|look at|see)\b",
@@ -52,9 +55,7 @@ class CompactionThrashDetector(Detector):
 
         session_cost = sum(e.cost_usd for e in events)
         sid = events[0].session_id if events else ""
-        # Post-compaction turns carry a summary they'd not need in a fresh
-        # session. Attribute a conservative tenth of session spend per event.
-        estimate = session_cost * min(0.30, 0.10 * max(1, len(compactions)))
+        estimate = _summary_resend_cost(events, compactions)
 
         detail = (
             f"{len(compactions)} compaction(s); peak context fill {peak:.0f}%."
@@ -89,6 +90,37 @@ class CompactionThrashDetector(Detector):
                 ],
             )
         )
+
+
+def _summary_resend_cost(events: list[Event], compactions: list[Event]) -> float:
+    """What carrying compaction summaries cost versus a fresh session.
+
+    The summary isn't logged, so its size is the first post-compaction turn's
+    context minus the session's opening context (system prompt and tools, which
+    a fresh session pays too). That excess, re-sent on every turn until the
+    next compaction, is priced at the turn's cache-read rate. Replaces a flat
+    10-30% of session spend that had no measurement behind it.
+    """
+    turns = [e for e in events if e.role is Role.ASSISTANT and e.usage]
+    if not turns or not compactions:
+        return 0.0
+
+    def ctx(e: Event) -> int:
+        return e.usage.input + e.usage.cache_read + e.usage.cache_write
+
+    base = ctx(turns[0])
+    cuts = sorted(c.seq for c in compactions)
+    cost = 0.0
+    for i, c in enumerate(cuts):
+        end = cuts[i + 1] if i + 1 < len(cuts) else float("inf")
+        after = [t for t in turns if c < t.seq < end]
+        if not after:
+            continue
+        summary = max(0, ctx(after[0]) - base)
+        for t in after[1:]:
+            p = lookup(t.model)
+            cost += summary * (p.cache_read or p.input) / 1_000_000
+    return min(cost, sum(e.cost_usd for e in events))
 
 
 class VagueInstructionDetector(Detector):
@@ -227,6 +259,10 @@ class ModelMismatchDetector(Detector):
             # this is reasoning work — never flag it.
             if _ERROR_EVIDENCE.search(text) or _ACCEPTANCE.search(text):
                 continue
+            # Harness-injected messages (<task-notification>…) aren't the
+            # user's prompt, and pasted logs are debugging input.
+            if text.lstrip().startswith("<") or _LOG_PASTE.search(text):
+                continue
             nxt = prompts[i + 1].seq if i + 1 < len(prompts) else max(e.seq for e in events)
             turn = [e for e in events if p.seq < e.seq <= nxt]
 
@@ -238,7 +274,10 @@ class ModelMismatchDetector(Detector):
                 e.role is Role.TOOL_CALL and e.tool and e.tool.kind in
                 (ToolKind.TASK, ToolKind.TEST) for e in turn
             )
-            if reasoning_needed or edits > 3:
+            calls = sum(1 for e in turn if e.role is Role.TOOL_CALL)
+            # Many tool calls = investigation or agentic work, which is what the
+            # expensive model is for, however short the prompt was.
+            if reasoning_needed or edits > 3 or calls > MECHANICAL_MAX_CALLS:
                 continue
 
             models = {e.model for e in turn if e.model and e.usage}
@@ -259,7 +298,17 @@ class ModelMismatchDetector(Detector):
                 alt_price = lookup(alt)
                 if alt_price.output <= 0:
                     continue
-                saving = cost * (1 - alt_price.output / price.output)
+                # A turn whose context won't fit the cheaper model couldn't
+                # have run there at all.
+                used = [e for e in turn if e.usage]
+                if any(e.usage.input + e.usage.cache_read + e.usage.cache_write
+                       > alt_price.context_limit for e in used):
+                    continue
+                # Reprice the turn's real token mix, not output price alone —
+                # most of a turn's cost is usually re-sent context.
+                saving = max(0.0, cost - sum(cost_of(alt, e.usage) for e in used))
+                if saving <= 0:
+                    continue
                 wasted += saving
                 evidence.append(
                     Evidence(

@@ -76,44 +76,59 @@ def run_global(sessions: list[list[Event]]) -> list[Finding]:
 
 
 def run_all(sessions: list[list[Event]]) -> list[Finding]:
-    """Per-session detectors, merged, plus cross-session ones.
+    return run_all_scored(sessions)[0]
+
+
+def run_all_scored(
+    sessions: list[list[Event]], dismissed: frozenset | set = frozenset()
+) -> tuple[list[Finding], float]:
+    """Per-session detectors, merged, plus cross-session ones — and the
+    reclaimable dollar figure the headline tile shows.
 
     Global findings are appended *after* the merge and then re-sorted, because
     they are already whole-corpus results — passing them through `merge` would
     have nothing to merge them with and would recompute a severity they set
     deliberately.
+
+    Detectors overlap: a loop, its target churn and the flooded output re-sent
+    on every looped turn are often the same dollars. Summing findings and
+    capping at total spend therefore showed "100% reclaimable" on real data.
+    Instead, each session contributes only its single largest finding, capped
+    at that session's spend — a floor that never counts a dollar twice.
+    `dismissed` is (detector, session_id, ts) evidence the user said wasn't
+    waste; it comes off that session's figure too.
     """
     findings: list[Finding] = []
+    reclaimable = 0.0
     for evs in sessions:
-        findings.extend(run_session(evs))
+        spend = sum(e.cost_usd for e in evs)
+        best = 0.0
+        for f in run_session(evs):
+            # A per-session finding can never cost more than its session did.
+            f.wasted_usd = min(f.wasted_usd, spend)
+            kept = f.wasted_usd - sum(
+                ev.cost_usd for ev in f.evidence
+                if (f.detector, ev.session_id, ev.ts) in dismissed
+            )
+            best = max(best, kept)
+            findings.append(f)
+        reclaimable += min(best, spend)
     merged = merge(findings)
     merged.extend(run_global(sessions))
 
-    # Backstop, not the primary fix: `merge()` sums each detector's per-session
-    # `wasted_usd` with no ceiling, so any detector with an overlap or
-    # double-count bug we haven't (yet) found and fixed at the source can still
-    # report a finding costing more than every session it drew from combined.
-    # Two prior spot-fixes (`rollups.engineering_metrics`'s loop_cost_usd and
-    # `server.py`'s aggregate `reclaimable`) capped the *sum across findings*
-    # downstream, but never touched an individual finding's own `wasted_usd` —
-    # so a single finding could still show a number bigger than the user's
-    # entire analyzed spend even after those fixes, which is exactly what real
-    # usage data surfaced (target_churn and loop findings each individually
-    # exceeding total spend, 2026-08-16). Capping every finding here, at the
-    # one place all of them pass through, makes "a finding costs more than you
-    # spent" structurally impossible instead of "impossible until the next
-    # detector ships with the same bug."
+    # Backstop: no single finding may exceed everything analysed (global
+    # detectors aren't covered by the per-session cap above).
     total_spend = sum(e.cost_usd for evs in sessions for e in evs)
     for f in merged:
         if f.wasted_usd > total_spend:
             f.wasted_usd = total_spend
 
-    return sorted(merged, key=lambda f: (-f.wasted_usd, -f.occurrences))
+    return sorted(merged, key=lambda f: (-f.wasted_usd, -f.occurrences)), reclaimable
 
 
 __all__ = [
     "Detector", "GlobalDetector", "Escalation", "Evidence", "Finding", "Attempt", "merge",
-    "DETECTORS", "GLOBAL_DETECTORS", "run_session", "run_global", "run_all",
+    "DETECTORS", "GLOBAL_DETECTORS", "run_session", "run_global", "run_all", "run_all_scored",
     "signature",
     "LoopDetector", "SameTargetChurnDetector", "CrossSessionLoopDetector",
     "BlindRetryDetector", "OutputFloodDetector", "VagueInstructionDetector",

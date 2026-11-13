@@ -53,6 +53,11 @@ LOOP_THRESHOLD = 3
 #: below it, that's just iteration and flagging it would be crying wolf.
 CONVERGED_REPORT_AT = 5
 
+#: Repeats more than this many assistant turns apart are separate incidents,
+#: not one loop. Without it, a common error seen 3 times across a 7,000-turn
+#: session billed the whole session as "loop" (real data, 2026-11-13).
+BURST_GAP_TURNS = 10
+
 #: Same file edited this many times with failures interleaved.
 CHURN_EDIT_THRESHOLD = 4
 CHURN_FAILURE_THRESHOLD = 2
@@ -122,6 +127,19 @@ def signature(error_text: str | None) -> str | None:
     if alnum < _MIN_SIGNATURE_ALNUM:
         return None
     return text
+
+
+def _bursts(events: list[Event], occurrences: list[Event]) -> list[list[Event]]:
+    """Split occurrences into runs no more than BURST_GAP_TURNS assistant
+    turns apart."""
+    turns = [e.seq for e in events if e.role is Role.ASSISTANT]
+    out: list[list[Event]] = []
+    for o in occurrences:
+        if out and sum(1 for t in turns if out[-1][-1].seq < t < o.seq) <= BURST_GAP_TURNS:
+            out[-1].append(o)
+        else:
+            out.append([o])
+    return out
 
 
 def _nearest_prompt(events: list[Event], seq: int) -> str:
@@ -225,7 +243,8 @@ class LoopDetector(Detector):
         worst_repeats = 0
         worst_attempts: list[Attempt] = []
 
-        for sig, occurrences in failures.items():
+        loops = [b for occ in failures.values() for b in _bursts(events, occ)]
+        for occurrences in loops:
             repeats = len(occurrences)
             if repeats < LOOP_THRESHOLD:
                 continue
@@ -369,7 +388,8 @@ class SameTargetChurnDetector(Detector):
         wasted = 0.0
         worst = 0
         worst_attempts: list[Attempt] = []
-        for path, evs in edits.items():
+        bursts = [(p, b) for p, occ in edits.items() for b in _bursts(events, occ)]
+        for path, evs in bursts:
             if len(evs) < CHURN_EDIT_THRESHOLD:
                 continue
             cost, _ = self.cost_between(events, evs[0].seq - 1, evs[-1].seq)
@@ -450,6 +470,10 @@ class CrossSessionLoopDetector(GlobalDetector):
         # it isn't just less persuasive — it gets filtered out of the report
         # entirely, since low-value findings are suppressed by design.
         session_cost: dict[str, float] = {}
+        # Re-solving cost: the error turn plus the next BURST_GAP_TURNS
+        # assistant turns in that session — not the whole session, which
+        # billed a long session in full for one recurring "file not found".
+        resolve_cost: dict[tuple[str, str], float] = {}
         for events in sessions:
             if not events:
                 continue
@@ -464,6 +488,9 @@ class CrossSessionLoopDetector(GlobalDetector):
                     continue
                 seen_here.add(sig)
                 by_sig[sig].append((e.session_id, e))
+                turns = [x.seq for x in events if x.role is Role.ASSISTANT and x.seq > e.seq]
+                hi = turns[min(BURST_GAP_TURNS, len(turns)) - 1] if turns else e.seq
+                resolve_cost[(sid, sig)] = Detector.cost_between(events, e.seq - 1, hi)[0]
 
         # A session's cost is attributed to cross-session waste **at most
         # once**, no matter how many different recurring signatures it
@@ -475,6 +502,7 @@ class CrossSessionLoopDetector(GlobalDetector):
         # exceeds total spend" structurally impossible rather than merely
         # unlikely.
         charged_sessions: set[str] = set()
+        charged_cost = 0.0
         evidence: list[Evidence] = []
         worst = 0
         best_attempts: list[Attempt] = []
@@ -488,7 +516,8 @@ class CrossSessionLoopDetector(GlobalDetector):
             # but only the part not already charged to a different signature.
             repeat_sessions = sorted(sessions_hit)[1:]
             newly_charged = [sid for sid in repeat_sessions if sid not in charged_sessions]
-            attributable = sum(session_cost.get(sid, 0.0) for sid in newly_charged)
+            attributable = sum(resolve_cost.get((sid, sig), 0.0) for sid in newly_charged)
+            charged_cost += attributable
             charged_sessions.update(newly_charged)
             _, sample = hits[0]
             if attributable > 0:
@@ -536,7 +565,7 @@ class CrossSessionLoopDetector(GlobalDetector):
 
         # Sum of costs actually charged — by construction, at most the total
         # cost of the sessions involved, never a multiple of it.
-        wasted = sum(session_cost.get(sid, 0.0) for sid in charged_sessions)
+        wasted = charged_cost
 
         return Finding(
             detector=self.name,
