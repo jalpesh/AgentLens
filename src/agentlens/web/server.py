@@ -345,6 +345,16 @@ def make_handler(db: str | None):
                     ))
                 except Exception as exc:
                     self._json({"error": str(exc)}, 500)
+            elif u.path == "/api/impact":
+                change = (q.get("change") or [""])[0]
+                if not _DATE_RE.fullmatch(change):
+                    self._json({"error": "change must be YYYY-MM-DD"}, 400)
+                    return
+                from ..analytics.impact import before_after
+                # Both sides of the date are needed, so the time filter is ignored.
+                with Store(db) as store:
+                    ss = [evs for _, evs in store.iter_sessions(provider, None, repo_id, None)]
+                self._json(before_after(ss, change, (q.get("label") or [""])[0][:120]))
             elif u.path == "/api/session":
                 sid = (q.get("id") or [""])[0]
                 with Store(db) as store:
