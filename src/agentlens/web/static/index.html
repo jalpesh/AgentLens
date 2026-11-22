@@ -405,6 +405,19 @@
 
   <!-- ==================== HISTORY ====================================== -->
   <section class="panel" id="p-history">
+    <div class="card" id="impact-card" style="margin-bottom:14px">
+      <h2>Did a change help? — before / after</h2>
+      <p class="dq-lead">Pick the day you added a skill, a CLAUDE.md / AGENTS.md rule or a
+        hook. Sessions in the current project/agent scope are split at that date (time filter
+        ignored) and compared on medians. Not a controlled test; needs 5+ sessions per side.</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <input type="date" id="impact-date" aria-label="Change date">
+        <input type="text" id="impact-label" placeholder="What changed (optional)" maxlength="120"
+          aria-label="What changed">
+        <button id="impact-run">Compare</button>
+      </div>
+      <div id="impact-out" style="margin-top:10px"></div>
+    </div>
     <div class="grid2">
       <div class="card"><h2>Prompt size over time</h2><div id="chart-prompt-size"></div></div>
       <div class="card"><h2>Prompt quality over time</h2><div id="chart-prompt-quality"></div></div>
@@ -1458,6 +1471,30 @@ function currentQuery(){
   if(sess) p.set('session_id', sess);
   return p.toString();
 }
+
+function runImpact(){
+  const out = $('#impact-out'), day = $('#impact-date').value;
+  if(AGENTLENS_STATIC_DATA){ out.innerHTML = '<div class="empty">Needs the live dashboard, or run <code>agentlens impact --change YYYY-MM-DD</code>.</div>'; return; }
+  if(!day){ out.innerHTML = '<div class="empty">Pick the date of the change.</div>'; return; }
+  const p = new URLSearchParams(currentQuery()); p.delete('days'); p.delete('session_id');
+  p.set('change', day); p.set('label', $('#impact-label').value);
+  out.innerHTML = '<div class="empty">Comparing…</div>';
+  fetch('/api/impact?' + p).then(r => r.json()).then(d => {
+    if(d.error){ out.innerHTML = `<div class="empty">${esc(d.error)}</div>`; return; }
+    const v = x => x == null ? '—' : num(Math.round(x * 100) / 100);
+    out.innerHTML = `<p class="dq-method">${num(d.before_sessions)} sessions before · ${num(d.after_sessions)} after</p>`
+      + (d.rows.length ? table([
+        {t:'Metric', f:r => esc(r.metric)},
+        {t:'Before', n:1, f:r => v(r.before)},
+        {t:'After', n:1, f:r => v(r.after)},
+        {t:'Change', n:1, f:r => r.change_pct == null ? '—' : (r.change_pct > 0 ? '+' : '') + r.change_pct + '%'},
+        {t:'Verdict', f:r => esc(r.verdict)},
+        {t:'Confidence', f:r => esc(r.confidence)},
+      ], d.rows) : '')
+      + d.caveats.map(c => `<p class="dq-method">${esc(c)}</p>`).join('');
+  }).catch(e => { out.innerHTML = `<div class="empty">${esc(String(e))}</div>`; });
+}
+$('#impact-run')?.addEventListener('click', runImpact);
 
 function reload(){
   $('#f-status').textContent = 'loading…';

@@ -116,6 +116,7 @@ agentlens tasks             # task economics: cost and outcome per inferred task
 agentlens context           # context efficiency: potential excess context + fixes
 agentlens patterns          # instructions and corrections you repeat across sessions
 agentlens recommend         # the changes worth most, across every signal above
+agentlens impact --change 2026-10-01 --label "repo-layer rule"   # did a change help?
 agentlens serve             # live dashboard on http://127.0.0.1:7878
 agentlens export            # redacted JSON for your own analysis
 ```
@@ -347,6 +348,14 @@ All of these work on the shared event format, so every supported agent gets them
   expected impact, confidence and affected sessions. It adds no new detection.
   Savings are lenses on the same sessions and overlap, so they are never summed;
   an unpriced model shows "cost unknown" rather than $0.
+- **Before / after** (*History* tab, `agentlens impact --change DATE`) checks
+  whether a skill, guideline or hook you added on a date helped. Events are
+  split at the date (a months-long resumed session counts on both sides),
+  segments without a typed prompt are dropped, and the sides are compared on
+  median cost, tokens and prompts per session plus correction, tool-failure and
+  waste rates. Needs 5+ sessions per side or it says "Insufficient data".
+  Confidence is low unless both sides have 20+ sessions and the same main
+  model, because it is a before/after comparison, not a controlled test.
 
 Anything that can't be established shows as "Insufficient data", never 0.
 

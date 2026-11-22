@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -896,6 +897,36 @@ def cmd_recommend(args) -> int:
     return 0
 
 
+def cmd_impact(args) -> int:
+    """Before/after a skill or guideline change: did sessions get better?"""
+    from .analytics.impact import before_after
+
+    if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", args.change):
+        console.print("[red]--change must be YYYY-MM-DD[/red]")
+        return 2
+    args.days = None  # both sides of the date are needed
+    with _open_store(args) as store:
+        sessions = _scoped_sessions(args, store)
+    out = before_after(sessions, args.change, args.label or "")
+    if args.json:
+        print(json.dumps(out, indent=2))
+        return 0
+    t = Table(title=f"Before / after {args.change}" + (f" — {args.label}" if args.label else "")
+              + f"  ({out['before_sessions']} vs {out['after_sessions']} sessions)",
+              header_style="bold")
+    for c in ("Metric", "Before", "After", "Change", "Verdict", "Confidence"):
+        t.add_column(c, justify="right" if c in ("Before", "After", "Change") else "left")
+    fmt = lambda x: "—" if x is None else f"{x:,.2f}"  # noqa: E731
+    for r in out["rows"]:
+        ch = "—" if r["change_pct"] is None else f"{r['change_pct']:+.1f}%"
+        t.add_row(r["metric"], fmt(r["before"]), fmt(r["after"]), ch, r["verdict"], r["confidence"])
+    if out["rows"]:
+        console.print(t)
+    for c in out["caveats"]:
+        console.print(f"[dim]{c}[/dim]")
+    return 0
+
+
 def cmd_context(args) -> int:
     """Context Efficiency: where context comes from and what looks unnecessary."""
     from .analytics.context_efficiency import context_efficiency
@@ -1047,6 +1078,12 @@ def build_parser() -> argparse.ArgumentParser:
     rc.add_argument("--json", action="store_true", help="machine-readable output")
     rc.add_argument("--limit", type=int, default=10)
     rc.set_defaults(func=cmd_recommend)
+
+    im = common(sub.add_parser("impact", help="before/after a skill or guideline change"))
+    im.add_argument("--change", required=True, help="date of the change, YYYY-MM-DD")
+    im.add_argument("--label", default="", help="what changed")
+    im.add_argument("--json", action="store_true", help="machine-readable output")
+    im.set_defaults(func=cmd_impact)
 
     e = common(sub.add_parser("export", help="export analysis as JSON"))
     e.add_argument("--out", default=None)
