@@ -252,6 +252,8 @@ def cmd_ingest(args) -> int:
                 f"  {a.display_name:<14} {len(sources):>4} file(s), {fresh:>4} new/changed"
             )
 
+        # Prices change more often than parsers: re-cost history every run.
+        store.reprice()
         c = store.counts()
 
     console.print(

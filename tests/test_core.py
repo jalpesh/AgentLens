@@ -302,3 +302,26 @@ def test_parser_version_change_purges_provider_so_reparse_cannot_duplicate(tmp_p
         assert st.purge_if_parser_changed("codex", "3")
         assert st.counts()["events"] == 0
         assert not st.source_is_current("f.jsonl", 1, 1.0, "3")
+
+
+def test_claude_5_and_4_6_plus_are_priced_and_not_matched_to_old_opus_4():
+    from agentlens.pricing import lookup
+    assert lookup("claude-opus-5-5").input == 4.0 and lookup("claude-opus-5").input == 5.0
+    assert lookup("claude-opus-4-8").input == 5.0  # was falling back to claude-opus-4 at $15
+    assert lookup("claude-haiku-5-5").output == 0.5
+
+
+def test_reprice_updates_history_but_keeps_manual_costs(tmp_path):
+    from agentlens.schema import Event, Provider, Role, Usage
+    from agentlens.store import Store
+    with Store(tmp_path / "db.sqlite") as st:
+        st.add_events([
+            Event(session_id="s", provider=Provider.CLAUDE_CODE, seq=1, ts="2026-11-01T00:00:00",
+                  role=Role.ASSISTANT, model="claude-opus-5-5", usage=Usage(input=1_000_000),
+                  cost_usd=0.0),
+            Event(session_id="m", provider=Provider.MANUAL, seq=1, ts="2026-11-01T00:00:00",
+                  role=Role.ASSISTANT, model="x", cost_usd=12.0),
+        ])
+        st.reprice()
+        rows = dict(st.conn.execute("select session_id, cost_usd from events").fetchall())
+    assert rows == {"s": 4.0, "m": 12.0}

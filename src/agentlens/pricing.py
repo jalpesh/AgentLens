@@ -36,6 +36,22 @@ class Price:
 # like `claude-opus-4-5-20251101` resolve against `claude-opus-4-5`.
 PRICES: dict[str, Price] = {
     # --- Anthropic -----------------------------------------------------
+    # Claude 5 / 4.6+ input and output from Anthropic's published list prices
+    # (Nov 2026). ponytail: where a cache rate wasn't published (Opus 5,
+    # Sonnet 5, Fable 5, Haiku 5.5) it uses the usual 0.1x read / 1.25x write.
+    # Haiku 5.5 doubles past 100K input; that tier is ignored.
+    "claude-fable-5-2":   Price(8.00, 40.00, 0.20, 10.00, 1_000_000),
+    "claude-fable-5-1":   Price(10.00, 50.00, 1.00, 12.50, 1_000_000),
+    "claude-fable-5":     Price(10.00, 50.00, 1.00, 12.50, 1_000_000),
+    "claude-opus-5-5":    Price(4.00, 20.00, 0.20, 5.00, 1_000_000),
+    "claude-opus-5":      Price(5.00, 25.00, 0.50, 6.25, 1_000_000),
+    "claude-sonnet-5-5":  Price(2.00, 10.00, 0.10, 2.50, 1_000_000),
+    "claude-sonnet-5":    Price(2.00, 10.00, 0.20, 2.50, 1_000_000),
+    "claude-haiku-5-5":   Price(0.10, 0.50, 0.01, 0.125, 1_000_000),
+    "claude-opus-4-8":    Price(5.00, 25.00, 0.50, 6.25, 1_000_000),
+    "claude-opus-4-7":    Price(5.00, 25.00, 0.50, 6.25, 1_000_000),
+    "claude-opus-4-6":    Price(5.00, 25.00, 0.50, 6.25, 1_000_000),
+    "claude-sonnet-4-6":  Price(3.00, 15.00, 0.30, 3.75, 1_000_000),
     "claude-opus-4-5":    Price(5.00, 25.00, 0.50, 6.25, 200_000),
     "claude-opus-4-1":    Price(15.00, 75.00, 1.50, 18.75, 200_000),
     "claude-opus-4":      Price(15.00, 75.00, 1.50, 18.75, 200_000),

@@ -240,6 +240,27 @@ class Store:
             self.conn.commit()
         return bool(stale)
 
+    def reprice(self) -> None:
+        """Recompute stored cost and context limit from stored tokens with the
+        current price table, so a pricing fix reaches history without
+        re-reading files (some may be gone). Manual rows carry no tokens and
+        keep the cost the user typed."""
+        from .pricing import context_limit_of, cost_of
+
+        def cost(model, i, o, cr, cw, r):
+            return cost_of(model, Usage(input=i, output=o, cache_read=cr,
+                                        cache_write=cw, reasoning=r))
+
+        self.conn.create_function("al_cost", 6, cost, deterministic=True)
+        self.conn.create_function("al_limit", 1, context_limit_of, deterministic=True)
+        self.conn.execute(
+            "UPDATE events SET cost_usd = al_cost(model, tok_input, tok_output, "
+            "tok_cache_read, tok_cache_write, tok_reasoning) WHERE provider != 'manual' "
+            "AND tok_input + tok_output + tok_cache_read + tok_cache_write + tok_reasoning > 0")
+        self.conn.execute("UPDATE events SET context_limit = al_limit(model) "
+                          "WHERE context_limit IS NOT NULL AND model IS NOT NULL")
+        self.conn.commit()
+
     def reset(self) -> None:
         self.conn.executescript("DELETE FROM events; DELETE FROM sources;")
         self.conn.commit()
