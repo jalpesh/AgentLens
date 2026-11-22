@@ -789,7 +789,7 @@ def cmd_data_quality(args) -> int:
 
 def cmd_tasks(args) -> int:
     """Task Economics: cost and outcome per inferred task, for every agent."""
-    from .analytics.tasks import build_tasks, by_outcome, task_economics
+    from .analytics.tasks import build_tasks, by_outcome, by_type, task_economics
 
     with _open_store(args) as store:
         sessions = _scoped_sessions(args, store)
@@ -801,6 +801,7 @@ def cmd_tasks(args) -> int:
     if args.json:
         print(json.dumps({"measures": [m.to_dict() for m in measures],
                           "by_outcome": by_outcome(tasks),
+                          "by_type": by_type(tasks),
                           "tasks": [t.to_dict() for t in tasks]}, indent=2, default=str))
         return 0
     table = Table(title="Task Economics")
@@ -819,6 +820,19 @@ def cmd_tasks(args) -> int:
     console.print(table)
     console.print(Text("  Outcomes: " + ", ".join(
         f"{k} {v}" for k, v in by_outcome(tasks).items()), style="dim"))
+    bt = Table(title="Spend by task type (keyword guess — low confidence)")
+    for col in ("Type", "Tasks", "Spend", "Share", "Per task", "Completed"):
+        bt.add_column(col, justify="left" if col == "Type" else "right")
+    for r in by_type(tasks):
+        bt.add_row(r["task_type"], str(r["tasks"]), f"${r['cost_usd']:,.2f}", f"{r['pct']}%",
+                   f"${r['cost_per_task']:,.2f}", str(r["completed"]))
+    console.print(bt)
+    top = Table(title="Most expensive tasks")
+    for col in ("Cost", "Type", "Outcome", "Task"):
+        top.add_column(col, justify="right" if col == "Cost" else "left")
+    for t in sorted(tasks, key=lambda t: -t.cost_usd)[:10]:
+        top.add_row(f"${t.cost_usd:,.2f}", t.task_type, t.outcome, t.title[:70] or t.task_id)
+    console.print(top)
     return 0
 
 

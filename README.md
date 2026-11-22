@@ -324,8 +324,13 @@ ingested history.
 
 All of these work on the shared event format, so every supported agent gets them.
 
-- **Tasks** are inferred, not recorded: sessions in the same agent + repo +
-  branch that resume within 30 minutes are one task. Outcome comes only from
+- **Tasks** are inferred, not recorded. Resumed sessions can run for weeks, so
+  each session is cut into tasks at a typed prompt that follows a pause over
+  2 hours, a `git commit`, or a branch change; pieces of different sessions
+  resumed within 30 minutes are joined. Each task gets a title (its first
+  prompt that isn't "continue"/"yes") and a type (bug fix, feature, refactor,
+  tests, docs, investigation, other), a low-confidence keyword guess shown as
+  *Spend by task type*. Outcome comes only from
   local evidence: *validated* (last test run passed), *unvalidated* (code
   changed, no test result), *failing*, *no change*, or *unknown* (the agent's
   history has no tool events — never guessed). Cost per completed task divides

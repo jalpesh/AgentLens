@@ -133,7 +133,8 @@ def test_idle_gaps_do_not_count_as_task_time():
     evs = [_ev("s", 1, "2026-03-01T10:00:00", Role.USER, text="x"),
            _ev("s", 2, "2026-03-01T10:10:00"),
            _ev("s", 3, "2026-03-04T10:00:00", Role.USER, text="back after days")]
-    (task,) = build_tasks([evs])
+    task, back = build_tasks([evs])  # days later = a new task
+    assert back.task_id == "s#2"
     assert task.active_min == 10.0
 
 
@@ -143,3 +144,56 @@ def test_cost_per_completed_task_ignores_unobservable_spend():
     tasks = build_tasks([blind, _session("ok", 0, edit=True, test=True, repo="r2")])
     m = _by_label(task_economics(tasks))
     assert m["AI cost / completed task"].value == 0.1
+
+
+def test_long_session_splits_at_commit_idle_and_branch_change_and_is_typed():
+    from agentlens.analytics.tasks import by_type
+    from agentlens.schema import ToolInfo, ToolKind
+    evs = [
+        _ev("s", 1, "2026-03-01T10:00:00", Role.USER, text="Fix the crash in login"),
+        _ev("s", 2, "2026-03-01T10:01:00", Role.TOOL_CALL, text='git commit -m "fix"',
+            tool=ToolInfo(kind=ToolKind.GIT)),
+        _ev("s", 3, "2026-03-01T10:02:00", Role.USER, text="Now add a logout button"),
+        _ev("s", 4, "2026-03-01T15:00:00", Role.USER, text="Rename the helpers"),
+        _ev("s", 5, "2026-03-01T15:01:00", Role.USER, text="still renaming"),
+    ]
+    tasks = build_tasks([evs])
+    assert [t.task_type for t in tasks] == ["bug fix", "feature", "refactor"]
+    assert [t.task_id for t in tasks] == ["s", "s#2", "s#3"]
+    assert tasks[2].title == "Rename the helpers" and tasks[2].prompts == 2
+    assert {r["task_type"] for r in by_type(tasks)} == {"bug fix", "feature", "refactor"}
+
+
+def test_no_cut_without_a_prompt_so_tasks_open_with_the_ask():
+    evs = [_ev("s", 1, "2026-03-01T10:00:00", Role.USER, text="Investigate the slow page"),
+           _ev("s", 2, "2026-03-01T18:00:00")]  # long pause, but no new prompt
+    (task,) = build_tasks([evs])
+    assert task.task_type == "investigation"
+
+
+def test_filler_prompts_are_skipped_and_files_break_ties():
+    from agentlens.schema import ToolInfo, ToolKind
+    evs = [_ev("s", 1, "2026-03-01T10:00:00", Role.USER, text="Continue from where you left off."),
+           _ev("s", 2, "2026-03-01T10:01:00", Role.USER, text="the login page please"),
+           _ev("s", 3, "2026-03-01T10:02:00", Role.TOOL_CALL,
+               tool=ToolInfo(kind=ToolKind.EDIT, target_path="tests/test_login.py"))]
+    (t,) = build_tasks([evs])
+    assert t.title == "the login page please" and t.task_type == "tests"
+
+
+def test_check_then_edit_is_not_investigation():
+    from agentlens.schema import ToolInfo, ToolKind
+    evs = [_ev("s", 1, "2026-03-01T10:00:00", Role.USER, text="check the ios plist values"),
+           _ev("s", 2, "2026-03-01T10:01:00", Role.TOOL_CALL,
+               tool=ToolInfo(kind=ToolKind.EDIT, target_path="ios/Info.plist"))]
+    assert build_tasks([evs])[0].task_type == "other"
+
+
+def test_loop_flags_only_the_task_that_contains_it():
+    from agentlens.analytics.detectors.base import Evidence, Finding
+    evs = [_ev("s", 1, "2026-03-01T10:00:00", Role.USER, text="Fix the parser"),
+           _ev("s", 2, "2026-03-01T10:05:00"),
+           _ev("s", 3, "2026-03-01T15:00:00", Role.USER, text="Now add docs")]
+    f = Finding("loop", "t", "p", "m", evidence=[Evidence("s", "2026-03-01T10:05:00", "q")])
+    first, second = build_tasks([evs], [f])
+    assert first.looped and not second.looped

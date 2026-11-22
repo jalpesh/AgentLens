@@ -350,6 +350,10 @@
       <h2>Task Economics — cost per piece of finished work</h2>
       <p class="dq-lead" id="te-lead"></p>
       <div id="tbl-te"></div>
+      <h3 style="margin-top:14px">Spend by task type</h3>
+      <p class="dq-method">Type is a keyword guess from the task's first prompts and the files it
+        edited (low confidence). Tasks are cut at a pause over 2 h, a git commit or a branch change.</p>
+      <div id="tbl-te-type"></div>
       <details style="margin-top:10px"><summary>Tasks (most expensive first)</summary>
         <div id="tbl-tasks"></div></details>
     </div>
@@ -938,13 +942,22 @@ function renderTaskEconomics(d){
   if(!ms.length){ el.innerHTML = '<div class="empty">No data in this scope.</div>'; return; }
   const o = te.by_outcome || {};
   $('#te-lead').textContent =
-    `Tasks are inferred from sessions (same agent + repo + branch, resumed within 30 min). `
+    `Tasks are inferred: sessions are cut at a pause over 2 h, a git commit or a branch change, and pieces resumed within 30 min are joined. `
     + `Outcomes: ${o.validated||0} validated · ${o.unvalidated||0} changed code without a test result · `
     + `${o.failing||0} ended on a failing test · ${o.no_change||0} read-only · `
     + `${o.unknown||0} unknown (agent history has no tool events).`;
   el.innerHTML = measureTable(ms);
+  $('#tbl-te-type').innerHTML = (te.by_type||[]).length ? table([
+    {t:'Type', f:r => esc(r.task_type)},
+    {t:'Tasks', n:1, f:r => num(r.tasks)},
+    {t:'Spend', n:1, f:r => money(r.cost_usd)},
+    {t:'Share', n:1, f:r => r.pct + '%'},
+    {t:'Per task', n:1, f:r => money(r.cost_per_task)},
+    {t:'Completed', n:1, f:r => num(r.completed)},
+  ], te.by_type) : '<div class="empty">No tasks in scope.</div>';
   $('#tbl-tasks').innerHTML = table([
     {t:'Started', f:r => esc((r.started_at||'').slice(0,16).replace('T',' '))},
+    {t:'Task', f:r => `<b>${esc(r.title || r.task_id)}</b><div class="dq-method">${esc(r.task_type)}</div>`},
     {t:'Agent', f:r => esc(r.provider)},
     {t:'Outcome', f:r => esc(r.outcome)},
     {t:'Why', f:r => `<span class="dq-method">${esc(r.signals.join('; '))}</span>`},
