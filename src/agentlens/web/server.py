@@ -40,7 +40,8 @@ from ..analytics.detectors import run_all, run_all_scored
 from ..analytics.context_efficiency import context_efficiency
 from ..analytics.prompt_patterns import prompt_patterns
 from ..analytics.recommendations import recommend
-from ..analytics.tasks import build_tasks, by_outcome as tasks_by_outcome, task_economics
+from ..analytics.tasks import (build_tasks, by_outcome as tasks_by_outcome, by_type,
+                               task_economics)
 from ..redact import redact_obj
 from ..schema import Provider, Usage
 from ..store import Store
@@ -212,6 +213,7 @@ def build_payload(
         "task_economics": {
             "measures": [m.to_dict() for m in task_economics(tasks)],
             "by_outcome": tasks_by_outcome(tasks),
+            "by_type": by_type(tasks),
             "tasks": [t.to_dict() for t in sorted(tasks, key=lambda t: -t.cost_usd)[:100]],
         },
         "context_efficiency": {
