@@ -8,7 +8,6 @@ def test_antigravity_and_config_files_are_not_gemini_cli_chats(tmp_path, monkeyp
         f = home / rel
         f.parent.mkdir(parents=True, exist_ok=True)
         f.write_text('{"messages": []}')
-    monkeypatch.setenv("HOME", str(tmp_path))
-    monkeypatch.delenv("GEMINI_HOME", raising=False)
-    found = [str(s.path.relative_to(home)) for s in GeminiCliAdapter().discover()]
+    monkeypatch.setenv("GEMINI_HOME", str(home))  # HOME is ignored on Windows
+    found = [s.path.relative_to(home).as_posix() for s in GeminiCliAdapter().discover()]
     assert found == ["tmp/abc/chats/session-1.json"]
