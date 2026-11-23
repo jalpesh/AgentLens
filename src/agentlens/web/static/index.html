@@ -269,12 +269,25 @@
        border:1px solid var(--line);border-radius:7px;padding:7px 10px;
        font-size:12px;opacity:0;transition:opacity .1s;z-index:60;
        font-variant-numeric:tabular-nums;box-shadow:0 4px 14px rgba(0,0,0,.4)}
+  .share-btn{margin-left:auto;background:var(--surface-2);color:var(--text-primary);
+    border:1px solid var(--line);border-radius:8px;padding:7px 12px;cursor:pointer;
+    font:inherit;font-size:13px}
+  .share-btn+nav{margin-left:8px}
+  #card-modal{position:fixed;inset:0;background:rgba(0,0,0,.72);display:none;z-index:80;
+    align-items:center;justify-content:center;padding:16px}
+  #card-modal.on{display:flex}
+  #card-modal .box{background:var(--surface-1);border-radius:14px;padding:18px;
+    width:min(960px,100%);max-height:100%;overflow:auto}
+  #card-modal img{width:100%;height:auto;border-radius:10px;display:block}
+  #card-modal .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px}
+  #card-modal .row .sp{flex:1}
 </style>
 </head>
 <body>
 <header>
   <span class="brand"><span class="dot"></span>AgentLens</span>
   <span class="badge">offline</span>
+  <button class="share-btn" id="card-open" type="button">Share card</button>
   <nav role="tablist">
     <button role="tab" aria-selected="true" data-p="waste">Change this</button>
     <button role="tab" aria-selected="false" data-p="overview">Overview</button>
@@ -503,6 +516,21 @@
   <p class="foot">All analysis runs on this machine. Nothing is uploaded.</p>
 </main>
 <div class="tip" id="tip"></div>
+<div id="card-modal" role="dialog" aria-modal="true" aria-label="Shareable report card">
+  <div class="box">
+    <img id="card-img" alt="AI coding report card">
+    <div class="row">
+      <label><input type="checkbox" id="card-hide"> Hide dollar amounts</label>
+      <span class="sp"></span>
+      <button class="share-btn" id="card-png" type="button">Download PNG</button>
+      <button class="share-btn" id="card-svg" type="button">Download SVG</button>
+      <button class="share-btn" id="card-close" type="button">Close</button>
+    </div>
+    <p class="dq-method" style="max-width:none;margin-top:10px">Built only from totals:
+      no prompts, file paths or project names. The image is made in this browser; nothing
+      is uploaded.</p>
+  </div>
+</div>
 
 <script>
 /* AGENTLENS_STATIC_EXPORT_MARKER — `agentlens report --html` replaces this
@@ -1529,6 +1557,34 @@ $('#f-reset')?.addEventListener('click', () => {
 });
 
 /* ---------- boot ---------- */
+/* ---------- shareable report card ---------- */
+function cardSvg(){
+  const rc = (DATA && DATA.report_card) || {};
+  return $('#card-hide').checked ? rc.svg_no_money : rc.svg;
+}
+function cardUrl(){ return URL.createObjectURL(new Blob([cardSvg() || ''], {type:'image/svg+xml'})); }
+function saveBlob(blob, name){
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = name; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+function showCard(){ $('#card-img').src = cardUrl(); }
+$('#card-open').onclick = () => { if(!cardSvg()) return; showCard(); $('#card-modal').classList.add('on'); };
+$('#card-close').onclick = () => $('#card-modal').classList.remove('on');
+$('#card-modal').onclick = e => { if(e.target.id === 'card-modal') $('#card-modal').classList.remove('on'); };
+document.addEventListener('keydown', e => { if(e.key === 'Escape') $('#card-modal').classList.remove('on'); });
+$('#card-hide').onchange = showCard;
+$('#card-svg').onclick = () => saveBlob(new Blob([cardSvg()], {type:'image/svg+xml'}), 'agentlens-report-card.svg');
+$('#card-png').onclick = () => {
+  const img = new Image();
+  img.onload = () => {  // 2x for sharp text on retina feeds
+    const c = document.createElement('canvas'); c.width = 2400; c.height = 1350;
+    c.getContext('2d').drawImage(img, 0, 0, 2400, 1350);
+    c.toBlob(b => saveBlob(b, 'agentlens-report-card.png'), 'image/png');
+  };
+  img.src = cardUrl();
+};
+
 function boot(d){
   DATA = d;
   if(d.error){ document.querySelector('main').innerHTML =

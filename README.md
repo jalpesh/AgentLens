@@ -117,6 +117,7 @@ agentlens context           # context efficiency: potential excess context + fix
 agentlens patterns          # instructions and corrections you repeat across sessions
 agentlens recommend         # the changes worth most, across every signal above
 agentlens impact --change 2026-10-01 --label "repo-layer rule"   # did a change help?
+agentlens card              # shareable report card (SVG); PNG via the dashboard
 agentlens serve             # live dashboard on http://127.0.0.1:7878
 agentlens export            # redacted JSON for your own analysis
 ```
@@ -361,6 +362,15 @@ All of these work on the shared event format, so every supported agent gets them
   waste rates. Needs 5+ sessions per side or it says "Insufficient data".
   Confidence is low unless both sides have 20+ sessions and the same main
   model, because it is a before/after comparison, not a controlled test.
+
+### Shareable report card
+
+**Share card** in the dashboard header (or `agentlens card`) makes one
+1200×675 image: AI spend, tasks, typical task cost, avoidable share with a
+letter grade, your most expensive habit with its fix, and spend by task type.
+**Hide dollar amounts** swaps every figure for a share. The card is built only
+from totals: no prompts, file paths or project names, and the PNG is drawn in
+your browser, so nothing is uploaded.
 
 Anything that can't be established shows as "Insufficient data", never 0.
 

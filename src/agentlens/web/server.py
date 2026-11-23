@@ -40,6 +40,7 @@ from ..analytics.detectors import run_all, run_all_scored
 from ..analytics.context_efficiency import context_efficiency
 from ..analytics.prompt_patterns import prompt_patterns
 from ..analytics.recommendations import recommend
+from ..analytics.report_card import card_data, render_svg
 from ..analytics.tasks import (build_tasks, by_outcome as tasks_by_outcome, by_type,
                                task_economics)
 from ..redact import redact_obj
@@ -174,6 +175,13 @@ def build_payload(
     tasks = build_tasks(sessions, findings)
     ctx_eff = context_efficiency(sessions)
     patterns = prompt_patterns(sessions)
+    daily = rollups.daily(sessions)
+    providers = rollups.by_provider(sessions)
+    recs = recommend([f.to_dict() for f in findings],
+                     ctx_eff["opportunities"], patterns["patterns"])
+    task_dicts = [t.to_dict() for t in tasks]
+    task_types = by_type(tasks)
+    card = card_data(totals, reclaimable, recs, task_types, task_dicts, providers, daily)
 
     return {
         "totals": totals,
@@ -181,13 +189,15 @@ def build_payload(
         "reclaimable_pct": round(
             100.0 * reclaimable / totals["cost_usd"], 1
         ) if totals["cost_usd"] else 0.0,
-        "daily": rollups.daily(sessions),
+        "daily": daily,
         "by_model": rollups.by_model(sessions),
-        "by_provider": rollups.by_provider(sessions),
+        "by_provider": providers,
         "tool_mix": rollups.tool_mix(sessions),
         "findings": [f.to_dict() for f in findings],
-        "recommendations": recommend([f.to_dict() for f in findings],
-                                     ctx_eff["opportunities"], patterns["patterns"]),
+        "recommendations": recs,
+        # Aggregates only — see analytics/report_card.py for the privacy rule.
+        "report_card": {"data": card, "svg": render_svg(card),
+                        "svg_no_money": render_svg(card, hide_money=True)},
         "dismissed_count": dismissed_count,
         "playbook": [r.to_dict() for r in build_playbook(findings)],
         "curated_reference": CURATED_REFERENCE,
@@ -213,8 +223,8 @@ def build_payload(
         "task_economics": {
             "measures": [m.to_dict() for m in task_economics(tasks)],
             "by_outcome": tasks_by_outcome(tasks),
-            "by_type": by_type(tasks),
-            "tasks": [t.to_dict() for t in sorted(tasks, key=lambda t: -t.cost_usd)[:100]],
+            "by_type": task_types,
+            "tasks": sorted(task_dicts, key=lambda t: -t["cost_usd"])[:100],
         },
         "context_efficiency": {
             **ctx_eff,
@@ -289,7 +299,11 @@ def export_html(
     payload["generated_at"] = datetime.now().isoformat(timespec="seconds")
     payload["redacted"] = redact
     if redact:
+        # The card is fixed labels and numbers only (see report_card.py), and
+        # redaction would mangle its SVG namespace URL into an invalid image.
+        card = payload.pop("report_card", None)
         payload = redact_obj(payload, full=True)
+        payload["report_card"] = card
 
     html = (STATIC / "index.html").read_text(encoding="utf-8")
     if _MARKER not in html:

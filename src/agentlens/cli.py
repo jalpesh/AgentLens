@@ -941,6 +941,26 @@ def cmd_impact(args) -> int:
     return 0
 
 
+def cmd_card(args) -> int:
+    """Shareable report card: one image built only from totals."""
+    from .web.server import build_payload
+
+    with _open_store(args) as store:
+        repo_id = store.resolve_project(getattr(args, "project", None))
+    rc = build_payload(args.db, args.provider, args.days, repo_id)["report_card"]
+    if not rc["data"]["sessions"]:
+        console.print("[yellow]No data.[/yellow] Run [bold]agentlens ingest[/bold] first.")
+        return 1
+    out = Path(args.out)
+    out.write_text(rc["svg_no_money"] if args.hide_money else rc["svg"], encoding="utf-8")
+    d = rc["data"]
+    console.print(f"Wrote [bold]{out}[/bold]: grade {d['grade']}, "
+                  f"{d['avoidable_pct']:g}% avoidable, {d['tasks']} tasks.")
+    console.print("[dim]For a PNG, open the dashboard (agentlens serve) → Share card. "
+                  "The card holds totals only: no prompts, paths or project names.[/dim]")
+    return 0
+
+
 def cmd_context(args) -> int:
     """Context Efficiency: where context comes from and what looks unnecessary."""
     from .analytics.context_efficiency import context_efficiency
@@ -1092,6 +1112,11 @@ def build_parser() -> argparse.ArgumentParser:
     rc.add_argument("--json", action="store_true", help="machine-readable output")
     rc.add_argument("--limit", type=int, default=10)
     rc.set_defaults(func=cmd_recommend)
+
+    cd = common(sub.add_parser("card", help="shareable report card image (SVG)"))
+    cd.add_argument("--out", default="agentlens-report-card.svg")
+    cd.add_argument("--hide-money", action="store_true", help="show shares instead of dollars")
+    cd.set_defaults(func=cmd_card)
 
     im = common(sub.add_parser("impact", help="before/after a skill or guideline change"))
     im.add_argument("--change", required=True, help="date of the change, YYYY-MM-DD")
