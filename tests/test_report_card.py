@@ -59,7 +59,7 @@ def test_static_export_keeps_the_card_a_valid_svg(tmp_path):
                              ts="2026-11-01T10:00:00", role=Role.ASSISTANT,
                              model="claude-opus-5-5", usage=Usage(input=1000), cost_usd=0.01,
                              cwd="/home/dev/secret-proj")])
-    html = export_html(str(tmp_path / "out.html"), db=str(db)).read_text()
+    html = export_html(str(tmp_path / "out.html"), db=str(db)).read_text(encoding="utf-8")
     line = next(ln for ln in html.splitlines() if ln.startswith("const AGENTLENS_STATIC_DATA"))
     data = json.loads(line.split("=", 1)[1].rstrip().rstrip(";"))
     svg = data["report_card"]["svg"]
