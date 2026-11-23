@@ -30,3 +30,7 @@ htmlcov/
 .DS_Store
 .idea/
 .vscode/
+
+# Real usage exports (agentlens report --html / export) never belong in the repo
+audit.html
+audit.json
