@@ -61,6 +61,17 @@ PRICES: dict[str, Price] = {
     "claude-3-7-sonnet":  Price(3.00, 15.00, 0.30, 3.75, 200_000),
     "claude-3-5-haiku":   Price(0.80, 4.00, 0.08, 1.00, 200_000),
     # --- OpenAI --------------------------------------------------------
+    # From developers.openai.com/api/docs/pricing, Nov 2026, standard tier.
+    # ponytail: the >272K-input tier (2x input) is ignored; GPT-5.6 Sol is on
+    # promotional pricing until 2026-11-30.
+    "gpt-5.6-sol":        Price(4.00, 20.00, 0.40, 0.0, 400_000),
+    "gpt-5.6-terra":      Price(2.00, 12.00, 0.20, 0.0, 400_000),
+    "gpt-5.6-luna":       Price(0.20, 1.20, 0.02, 0.0, 400_000),
+    "gpt-5.5":            Price(5.00, 30.00, 0.50, 0.0, 400_000),
+    "gpt-5.4":            Price(2.50, 15.00, 0.25, 0.0, 400_000),
+    "gpt-5.3-codex":      Price(1.75, 14.00, 0.175, 0.0, 400_000),
+    "gpt-4o-mini":        Price(0.15, 0.60, 0.075, 0.0, 128_000),
+    "gpt-4o":             Price(2.50, 10.00, 1.25, 0.0, 128_000),
     "gpt-5.1-codex":      Price(1.25, 10.00, 0.125, 0.0, 400_000),
     "gpt-5.1":            Price(1.25, 10.00, 0.125, 0.0, 400_000),
     "gpt-5-codex":        Price(1.25, 10.00, 0.125, 0.0, 400_000),
@@ -70,6 +81,11 @@ PRICES: dict[str, Price] = {
     "gpt-4.1":            Price(2.00, 8.00, 0.50, 0.0, 1_047_576),
     "o4-mini":            Price(1.10, 4.40, 0.275, 0.0, 200_000),
     # --- Google --------------------------------------------------------
+    # From aistudio.google.com/docs/pricing, Nov 2026. ponytail: 3.8/3.6 Flash
+    # prices double on 2027-01-01; one price per model, so update then.
+    "gemini-3.8-flash":   Price(0.75, 3.75, 0.075, 0.0, 1_000_000),
+    "gemini-3.6-flash":   Price(0.75, 3.75, 0.075, 0.0, 1_000_000),
+    "gemini-3.1-pro":     Price(2.00, 12.00, 0.20, 0.0, 1_000_000),
     "gemini-3-pro":       Price(2.00, 12.00, 0.20, 0.0, 1_000_000),
     "gemini-3-flash":     Price(0.30, 2.50, 0.03, 0.0, 1_000_000),
     "gemini-2.5-pro":     Price(1.25, 10.00, 0.31, 0.0, 1_048_576),

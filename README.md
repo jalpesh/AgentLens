@@ -413,7 +413,7 @@ Codex or Gemini — so it speaks for all supported agents at once. See
 |---|---|---|
 | **Claude Code** | `~/.claude/projects/**/*.jsonl` | ✅ full — usage, cache split, tools, compaction |
 | **Codex CLI** | `$CODEX_HOME/{sessions,archived_sessions}` | ✅ full — cumulative counters resolved to deltas |
-| **Junie** | `~/.junie/history.json` | ✅ full |
+| **Junie** | `~/.junie/sessions/<id>/` (Junie CLI) · `~/.junie/history.json` (older IDE builds) | ✅ requests, per-call tokens, context fill, failures; tool steps not parsed yet, so outcomes show as unknown |
 | **OpenCode** | `~/.local/share/opencode/storage/message/**/*.json` | ✅ full — one JSON file per message, documented layout |
 | **Gemini CLI** | `~/.gemini/tmp/<project-hash>/chats/` | ⚠️ experimental — location confirmed by Google's docs, on-disk *format* isn't, so this tolerates several plausible shapes |
 | **GitHub Copilot CLI** | `~/.copilot/session-store.db` | ⚠️ experimental — undocumented SQLite; parses via schema introspection, included anyway for its install base |
@@ -496,7 +496,7 @@ you've sent:
 ```
  ~/.claude/projects/**/*.jsonl        ─┐
  $CODEX_HOME/sessions/*.jsonl         ─┤
- ~/.junie/history.json                ─┤
+ ~/.junie/sessions/*/events.jsonl     ─┤
  ~/.local/share/opencode/storage/     ─┼─→ [Adapter] ─→ Event[] ─→ [SQLite]
  ~/.gemini/tmp/**/chats/         ⚠️    ─┤                              │
  ~/.copilot/session-store.db     ⚠️    ─┤                              ▼

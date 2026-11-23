@@ -1,16 +1,23 @@
 """Junie (JetBrains) adapter.
 
-Source: ``~/.junie/history.json`` — a single JSON document rather than a JSONL
-stream, plus optional per-project ``.junie/`` directories.
+Two sources under ``$JUNIE_HOME`` (default ``~/.junie``):
 
-Junie's document has gone through several shapes across IDE releases, so this
-adapter locates the session array structurally instead of assuming a fixed key.
+1. **Junie CLI** (current): one folder per session,
+   ``sessions/<id>/{events.jsonl, summary.json, state.json, transcript.md}``.
+   Verified against Junie CLI 26.11. We read the request (``state.json`` →
+   ``issue.description``), token usage per model call
+   (``LlmResponseMetadataEvent``), context-window fill
+   (``ContextWindowReportEvent``) and failures. Tool steps are not parsed yet,
+   so outcomes show as unknown rather than guessed.
+2. **Legacy** ``history.json``: a single JSON document whose shape moved between
+   IDE releases, so its session array is located structurally.
 """
 
 from __future__ import annotations
 
 import json
 import os
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Iterator
 
@@ -34,7 +41,7 @@ _STEP_KEYS = ("steps", "messages", "events", "turns", "requests", "calls")
 class JunieAdapter(Adapter):
     provider = Provider.JUNIE
     display_name = "Junie"
-    schema_version = "2"
+    schema_version = "3"
 
     def roots(self) -> list[Path]:
         env = os.environ.get("JUNIE_HOME")
@@ -54,7 +61,90 @@ class JunieAdapter(Adapter):
                     sf = SourceFile.of(p)
                     if sf not in out:
                         out.append(sf)
+            for p in sorted(root.glob("sessions/*/events.jsonl")):
+                if p.stat().st_size > 0:
+                    out.append(SourceFile.of(p))
         return out
+
+    # --- Junie CLI sessions --------------------------------------------
+
+    @staticmethod
+    def _ts(ms) -> str:
+        try:
+            return datetime.fromtimestamp(int(ms) / 1000, tz=timezone.utc).isoformat()
+        except (TypeError, ValueError, OverflowError, OSError):
+            return ""
+
+    @staticmethod
+    def _read_json(path: Path) -> dict:
+        try:
+            d = json.loads(path.read_text(encoding="utf-8", errors="replace"))
+            return d if isinstance(d, dict) else {}
+        except (OSError, json.JSONDecodeError):
+            return {}
+
+    def _parse_cli_session(self, events_path: Path) -> Iterator[Event]:
+        folder = events_path.parent
+        summary = self._read_json(folder / "summary.json")
+        sid = str(summary.get("sessionId") or folder.name)
+        cwd = summary.get("projectDir")
+        base = dict(session_id=sid, provider=self.provider, cwd=cwd,
+                    repo_id=hash_repo(cwd), repo_label=repo_label_of(cwd))
+        seq = 0
+
+        # The request lives in the last agent state, stored as a JSON string.
+        request = ""
+        state = self._read_json(folder / "state.json")
+        blob = ((state.get("event") or {}).get("agentEvent") or {}).get("blob")
+        if isinstance(blob, str):
+            try:
+                issue = (json.loads(blob).get("lastAgentState") or {}).get("issue") or {}
+                request = str(issue.get("description") or "")
+            except (json.JSONDecodeError, AttributeError):
+                pass
+        start = self._ts(summary.get("createdAt"))
+        if request.strip():
+            seq += 1
+            yield Event(seq=seq, role=Role.USER, ts=start, text=request, raw_id="request", **base)
+        if summary.get("taskName"):
+            seq += 1
+            yield Event(seq=seq, role=Role.SYSTEM, ts=start, text=str(summary["taskName"]),
+                        raw_id="title", **base)
+
+        ctx: tuple[int, int] | None = None
+        try:
+            lines = events_path.read_text(encoding="utf-8", errors="replace").splitlines()
+        except OSError:
+            return
+        for i, line in enumerate(lines):
+            try:
+                d = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            a = ((d.get("event") or {}).get("agentEvent") or {}) if isinstance(d, dict) else {}
+            kind, ts = a.get("kind"), self._ts(d.get("timestampMs"))
+            if kind == "ContextWindowReportEvent":
+                ctx = (int(a.get("used") or 0), int(a.get("size") or 0))
+            elif kind == "LlmResponseMetadataEvent":
+                for j, m in enumerate(a.get("modelUsage") or []):
+                    cached = int(m.get("cacheInputTokens") or 0)
+                    # inputTokens includes the cached part (seen: 6216 in, 6158 cached).
+                    usage = Usage(input=max(0, int(m.get("inputTokens") or 0) - cached),
+                                  output=int(m.get("outputTokens") or 0), cache_read=cached,
+                                  cache_write=int(m.get("cacheCreateTokens") or 0))
+                    model = m.get("model")
+                    seq += 1
+                    yield Event(seq=seq, role=Role.ASSISTANT, ts=ts, model=model, usage=usage,
+                                cost_usd=cost_of(model, usage),
+                                context_tokens=ctx[0] if ctx else usage.input + usage.cache_read,
+                                context_limit=(ctx[1] if ctx and ctx[1] else
+                                               context_limit_of(model)),
+                                raw_id=f"llm-{i}-{j}", **base)
+            elif kind == "AgentFailureEvent":
+                seq += 1
+                yield Event(seq=seq, role=Role.SYSTEM, ts=ts,
+                            text=f"Junie failed: {a.get('message') or a.get('errorCode') or ''}",
+                            raw_id=f"fail-{i}", **base)
 
     # --- structural helpers --------------------------------------------
 
@@ -85,6 +175,9 @@ class JunieAdapter(Adapter):
         return []
 
     def parse(self, source: SourceFile) -> Iterator[Event]:
+        if source.path.name == "events.jsonl":
+            yield from self._parse_cli_session(source.path)
+            return
         try:
             doc = json.loads(source.path.read_text(encoding="utf-8", errors="replace"))
         except (json.JSONDecodeError, OSError):

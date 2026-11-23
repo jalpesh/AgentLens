@@ -56,6 +56,9 @@ _ROLE_MAP = {
 }
 
 
+_NOT_CHATS = {"config", "bin", "extensions", "logs", "sandbox"}
+
+
 class GeminiCliAdapter(Adapter):
     provider = Provider.GEMINI_CLI
     display_name = "Gemini CLI"
@@ -73,6 +76,11 @@ class GeminiCliAdapter(Adapter):
                 continue
             for pattern in ("*.json", "*.jsonl"):
                 for p in self.safe_glob(root, pattern, self):
+                    # ~/.gemini also holds Antigravity's data and Gemini's own
+                    # config; those are not Gemini CLI chats.
+                    rel = p.relative_to(root).parts
+                    if rel and (rel[0].startswith("antigravity") or rel[0] in _NOT_CHATS):
+                        continue
                     if p.stat().st_size > 0 and p not in out:
                         out[p] = SourceFile.of(p)
         return sorted(out.values(), key=lambda s: s.mtime)

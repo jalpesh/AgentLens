@@ -325,3 +325,11 @@ def test_reprice_updates_history_but_keeps_manual_costs(tmp_path):
         st.reprice()
         rows = dict(st.conn.execute("select session_id, cost_usd from events").fetchall())
     assert rows == {"s": 4.0, "m": 12.0}
+
+
+def test_current_openai_and_gemini_models_are_priced_not_fallen_back():
+    from agentlens.pricing import lookup
+    assert lookup("gpt-5.5").input == 5.0          # was the gpt-5 fallback at $1.25
+    assert lookup("gpt-5.6-sol").output == 20.0
+    assert lookup("gemini-3.8-flash-medium").input == 0.75  # Antigravity's id, was $0
+    assert lookup("gpt-5.1-codex-max").input == 1.25         # still the 5.1-codex row

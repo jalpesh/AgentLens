@@ -34,7 +34,10 @@ def _rec(source, kind, title, problem, recommendation, confidence, sessions,
         "recommendation": recommendation, "confidence": confidence,
         "sessions": sessions, "tokens": int(tokens), "cost_usd": cost,
         "expected_impact": _impact(cost, int(tokens), sessions),
-        "evidence": [e for e in evidence if e][:3],
+        # Distinct, one-line examples: a repeated quote or a 30-line traceback
+        # says nothing more than the first line of it.
+        "evidence": list(dict.fromkeys(
+            " ".join(str(e).split())[:110] for e in evidence if e))[:3],
     }
 
 

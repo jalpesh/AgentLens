@@ -52,3 +52,11 @@ def test_session_count_survives_the_five_item_evidence_cap():
     f = merge(fs)[0]
     assert len(f.evidence) == 5 and f.sessions == 8
     assert recommend([f.to_dict()], [], [])[0]["sessions"] == 8
+
+
+def test_evidence_is_distinct_and_one_line():
+    f = _finding(1.0)
+    f["evidence"] = [{"session_id": s, "quote": "Traceback (most recent call last):\n  File x"}
+                     for s in "abc"]
+    ev = recommend([f], [], [])[0]["evidence"]
+    assert ev == ["Traceback (most recent call last): File x"]
